@@ -51,6 +51,9 @@ public class SlipService {
         Slip slip = new Slip();
         slip.setSlipNo(slipNo);
         slip.setStaffName(request.getStaffName());
+        slip.setCustomerName(request.getCustomerName());
+        slip.setContactInfo(request.getContactInfo());
+        slip.setEmailAddress(request.getEmailAddress());
         slip.setLoanDate(request.getLoanDate());
         slip.setReturnDate(request.getReturnDate());
         slipMapper.insert(slip);

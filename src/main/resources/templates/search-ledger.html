@@ -156,6 +156,18 @@
                     <input type="text" id="staffName" placeholder="担当者名を入力">
                 </div>
                 <div class="field">
+                    <label for="customerName">氏名</label>
+                    <input type="text" id="customerName" placeholder="氏名を入力">
+                </div>
+                <div class="field">
+                    <label for="contactInfo">連絡先</label>
+                    <input type="text" id="contactInfo" placeholder="電話番号などを入力">
+                </div>
+                <div class="field">
+                    <label for="emailAddress">メールアドレス</label>
+                    <input type="email" id="emailAddress" placeholder="mail@example.com">
+                </div>
+                <div class="field">
                     <label for="loanDate">貸出日</label>
                     <input type="date" id="loanDate">
                 </div>
@@ -217,6 +229,9 @@
     const addMediaRowButton = document.getElementById("addMediaRowButton");
     const mediaRows = document.getElementById("mediaRows");
     const staffNameInput = document.getElementById("staffName");
+    const customerNameInput = document.getElementById("customerName");
+    const contactInfoInput = document.getElementById("contactInfo");
+    const emailAddressInput = document.getElementById("emailAddress");
     const loanDateInput = document.getElementById("loanDate");
     const returnDateInput = document.getElementById("returnDate");
     const maxRows = 10;
@@ -369,6 +384,9 @@
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     staffName: normalizeText(staffNameInput.value),
+                    customerName: normalizeText(customerNameInput.value),
+                    contactInfo: normalizeText(contactInfoInput.value),
+                    emailAddress: normalizeText(emailAddressInput.value),
                     loanDate: loanDateInput.value,
                     returnDate: normalizeText(returnDateInput.value) || null,
                     details: details,

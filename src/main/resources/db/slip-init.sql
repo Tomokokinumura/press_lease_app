@@ -2,6 +2,9 @@ CREATE TABLE IF NOT EXISTS slip (
     id INT AUTO_INCREMENT PRIMARY KEY,
     slip_no VARCHAR(20),
     staff_name VARCHAR(50),
+    customer_name VARCHAR(100),
+    contact_info VARCHAR(100),
+    email_address VARCHAR(100),
     loan_date DATE,
     return_date DATE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP

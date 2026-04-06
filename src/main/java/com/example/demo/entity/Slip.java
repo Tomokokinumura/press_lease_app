@@ -8,6 +8,9 @@ public class Slip {
     private Integer id;
     private String slipNo;
     private String staffName;
+    private String customerName;
+    private String contactInfo;
+    private String emailAddress;
     private LocalDate loanDate;
     private LocalDate returnDate;
     private LocalDateTime createdAt;
@@ -34,6 +37,30 @@ public class Slip {
 
     public void setStaffName(String staffName) {
         this.staffName = staffName;
+    }
+
+    public String getCustomerName() {
+        return customerName;
+    }
+
+    public void setCustomerName(String customerName) {
+        this.customerName = customerName;
+    }
+
+    public String getContactInfo() {
+        return contactInfo;
+    }
+
+    public void setContactInfo(String contactInfo) {
+        this.contactInfo = contactInfo;
+    }
+
+    public String getEmailAddress() {
+        return emailAddress;
+    }
+
+    public void setEmailAddress(String emailAddress) {
+        this.emailAddress = emailAddress;
     }
 
     public LocalDate getLoanDate() {

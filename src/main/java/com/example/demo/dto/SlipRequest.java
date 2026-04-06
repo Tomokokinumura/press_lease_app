@@ -10,6 +10,9 @@ import com.example.demo.entity.SlipMedia;
 public class SlipRequest {
 
     private String staffName;
+    private String customerName;
+    private String contactInfo;
+    private String emailAddress;
     private LocalDate loanDate;
     private LocalDate returnDate;
     private List<SlipDetail> details = new ArrayList<>();
@@ -21,6 +24,30 @@ public class SlipRequest {
 
     public void setStaffName(String staffName) {
         this.staffName = staffName;
+    }
+
+    public String getCustomerName() {
+        return customerName;
+    }
+
+    public void setCustomerName(String customerName) {
+        this.customerName = customerName;
+    }
+
+    public String getContactInfo() {
+        return contactInfo;
+    }
+
+    public void setContactInfo(String contactInfo) {
+        this.contactInfo = contactInfo;
+    }
+
+    public String getEmailAddress() {
+        return emailAddress;
+    }
+
+    public void setEmailAddress(String emailAddress) {
+        this.emailAddress = emailAddress;
     }
 
     public LocalDate getLoanDate() {

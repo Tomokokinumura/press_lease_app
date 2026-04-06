@@ -15,11 +15,17 @@
         INSERT INTO slip (
             slip_no,
             staff_name,
+            customer_name,
+            contact_info,
+            email_address,
             loan_date,
             return_date
         ) VALUES (
             #{slipNo},
             #{staffName},
+            #{customerName},
+            #{contactInfo},
+            #{emailAddress},
             #{loanDate},
             #{returnDate}
         )
