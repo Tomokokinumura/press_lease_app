@@ -43,6 +43,7 @@ public class GoogleSheetsService {
     public Optional<SheetSearchResponse> findByCode(String code) throws IOException, GeneralSecurityException {
         List<List<Object>> rows = getSheetData();
         return rows.stream()
+                .skip(1)
                 .filter(row -> !row.isEmpty())
                 .filter(row -> code.equals(String.valueOf(row.get(0)).trim()))
                 .findFirst()

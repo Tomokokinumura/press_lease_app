@@ -12,4 +12,9 @@ public class HelloController {
         model.addAttribute("message", "Hello! Spring Boot");
         return "hello";
     }
+
+    @GetMapping("/search")
+    public String showSearchPage() {
+        return "search";
+    }
 }

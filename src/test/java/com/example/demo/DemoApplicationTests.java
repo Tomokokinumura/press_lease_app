@@ -46,6 +46,14 @@ class DemoApplicationTests {
 	}
 
 	@Test
+	void searchPageLoads() throws Exception {
+		mockMvc.perform(get("/search"))
+				.andExpect(status().isOk())
+				.andExpect(view().name("search"))
+				.andExpect(content().string(Matchers.containsString("品番検索")));
+	}
+
+	@Test
 	void searchReturnsMatchingSheetRow() throws Exception {
 		given(googleSheetsService.findByCode("A001"))
 				.willReturn(Optional.of(new SheetSearchResponse("A001", "商品名", "1000")));
