@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="ja" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>業務メニュー</title>
+    <style>
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: grid;
+            place-items: center;
+            background: #f7f4ee;
+            font-family: "Yu Gothic UI", "Hiragino Sans", sans-serif;
+            color: #2d2418;
+        }
+        .panel {
+            width: min(720px, calc(100vw - 32px));
+            background: #fffdf8;
+            border: 1px solid #d9ccb7;
+            border-radius: 20px;
+            padding: 32px;
+            box-shadow: 0 18px 40px rgba(88, 62, 30, 0.08);
+        }
+        h1 {
+            margin: 0 0 24px;
+            font-size: 32px;
+            text-align: center;
+        }
+        .menu {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+        }
+        .menu a {
+            display: grid;
+            place-items: center;
+            min-height: 120px;
+            border-radius: 18px;
+            background: #b85c38;
+            color: #fff;
+            text-decoration: none;
+            font-size: 22px;
+            font-weight: 700;
+        }
+        @media (max-width: 640px) {
+            .menu {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+<main class="panel">
+    <h1>業務メニュー</h1>
+    <nav class="menu">
+        <a href="/search">新規登録</a>
+        <a href="/return">返却登録</a>
+        <a href="/slip-search">伝票検索</a>
+        <a href="/master">マスタ変更</a>
+    </nav>
+</main>
+</body>
+</html>

@@ -18,8 +18,10 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import com.example.demo.controller.ExcelExportController;
 import com.example.demo.controller.HelloController;
 import com.example.demo.controller.SheetController;
+import com.example.demo.controller.TopController;
 import com.example.demo.dto.SheetSearchResponse;
 import com.example.demo.mapper.SlipDetailMapper;
 import com.example.demo.mapper.SlipMapper;
@@ -28,7 +30,7 @@ import com.example.demo.mapper.TodoMapper;
 import com.example.demo.service.GoogleSheetsService;
 import com.example.demo.service.SlipService;
 
-@WebMvcTest({HelloController.class, SheetController.class})
+@WebMvcTest({HelloController.class, TopController.class, ExcelExportController.class, SheetController.class})
 class DemoApplicationTests {
 
 	@Autowired
@@ -65,8 +67,16 @@ class DemoApplicationTests {
 	void searchPageLoads() throws Exception {
 		mockMvc.perform(get("/search"))
 				.andExpect(status().isOk())
-				.andExpect(view().name("search-ledger"))
+				.andExpect(view().name("search-stage1"))
 				.andExpect(content().string(Matchers.containsString("品番検索")));
+	}
+
+	@Test
+	void topPageLoads() throws Exception {
+		mockMvc.perform(get("/"))
+				.andExpect(status().isOk())
+				.andExpect(view().name("index"))
+				.andExpect(content().string(Matchers.containsString("新規登録")));
 	}
 
 	@Test

@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="ja" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>新規登録</title>
+    <style>
+        :root {
+            --bg: #f6f1e8;
+            --panel: #fffdf8;
+            --line: #d9ccb7;
+            --text: #2d2418;
+            --muted: #756650;
+            --accent: #b85c38;
+            --accent-dark: #8f4528;
+            --surface: #fcf7f0;
+            --overlay: rgba(45, 36, 24, 0.45);
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: "Yu Gothic UI", "Hiragino Sans", sans-serif;
+            color: var(--text);
+            background:
+                radial-gradient(circle at top left, #fff8ea, transparent 32%),
+                linear-gradient(180deg, #f6efe2 0%, #efe4d2 100%);
+            padding: 24px;
+        }
+        .page {
+            max-width: 1240px;
+            margin: 0 auto;
+            display: grid;
+            gap: 20px;
+        }
+        .panel {
+            background: rgba(255, 253, 248, 0.92);
+            border: 1px solid var(--line);
+            border-radius: 22px;
+            padding: 24px;
+            box-shadow: 0 18px 40px rgba(88, 62, 30, 0.08);
+        }
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .topbar a {
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 700;
+        }
+        h1 {
+            margin: 10px 0 0;
+            font-size: clamp(28px, 4vw, 40px);
+        }
+        .intro {
+            margin: 10px 0 0;
+            color: var(--muted);
+            line-height: 1.7;
+        }
+        .header-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(180px, 1fr));
+            gap: 14px;
+        }
+        .field {
+            display: grid;
+            gap: 8px;
+        }
+        label {
+            font-size: 14px;
+            font-weight: 700;
+        }
+        input, button {
+            font: inherit;
+        }
+        .field input,
+        .search-row input,
+        .media-row input,
+        tbody input,
+        .action-buttons button {
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            padding: 12px 14px;
+            background: #fff;
+            color: var(--text);
+        }
+        .field input:focus,
+        .search-row input:focus,
+        .media-row input:focus,
+        tbody input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(184, 92, 56, 0.12);
+        }
+        .search-block, .media-block {
+            display: grid;
+            gap: 12px;
+        }
+        .search-row {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .search-row input {
+            width: min(360px, 100%);
+            font-size: 18px;
+            letter-spacing: 0.08em;
+        }
+        .hint, #message, .meta-note {
+            color: var(--muted);
+            font-size: 14px;
+        }
+        #message[data-state="error"] { color: #b42318; }
+        #message[data-state="success"] { color: #1d6f42; }
+        .media-header, .action-buttons {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .action-buttons {
+            justify-content: flex-end;
+        }
+        .action-buttons button,
+        .media-header button {
+            cursor: pointer;
+            font-weight: 700;
+        }
+        .primary {
+            background: var(--accent) !important;
+            border-color: var(--accent-dark) !important;
+            color: #fff !important;
+        }
+        .secondary {
+            background: var(--surface) !important;
+        }
+        .media-rows {
+            display: grid;
+            gap: 10px;
+        }
+        .media-row {
+            display: grid;
+            grid-template-columns: 1.2fr 0.9fr 1.3fr auto;
+            gap: 10px;
+            align-items: end;
+        }
+        .media-row .remove-btn {
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            padding: 10px 12px;
+            background: #fff7f2;
+            color: var(--accent);
+            cursor: pointer;
+            font-weight: 700;
+        }
+        .table-wrap {
+            overflow-x: auto;
+            border: 1px solid var(--line);
+            border-radius: 18px;
+            background: var(--panel);
+        }
+        table {
+            width: 100%;
+            min-width: 820px;
+            border-collapse: collapse;
+        }
+        thead th {
+            background: #efe1cf;
+            text-align: left;
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--line);
+        }
+        tbody td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #efe5d6;
+        }
+        .empty {
+            padding: 28px;
+            text-align: center;
+            color: var(--muted);
+        }
+        .modal {
+            position: fixed;
+            inset: 0;
+            display: none;
+            place-items: center;
+            background: var(--overlay);
+            padding: 24px;
+        }
+        .modal.is-open {
+            display: grid;
+        }
+        .modal-card {
+            width: min(420px, 100%);
+            background: #fff;
+            border-radius: 18px;
+            padding: 24px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.18);
+        }
+        .modal-card h2 {
+            margin: 0 0 12px;
+        }
+        .modal-card p {
+            margin: 0 0 18px;
+            line-height: 1.7;
+        }
+        @media (max-width: 900px) {
+            .header-grid {
+                grid-template-columns: 1fr;
+            }
+            .media-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+<main class="page">
+    <section class="panel">
+        <div class="topbar">
+            <a href="/">トップへ戻る</a>
+            <span class="meta-note" id="slipNoLabel">未保存</span>
+        </div>
+        <h1>新規登録</h1>
+        <p class="intro">品番検索結果を編集しながら保存できます。保存成功時は伝票番号をモーダルでお知らせし、現在の画面内容を Excel 形式で出力できます。</p>
+    </section>
+
+    <section class="panel">
+        <div class="header-grid">
+            <div class="field">
+                <label for="staffName">担当者名</label>
+                <input type="text" id="staffName" placeholder="担当者名を入力">
+            </div>
+            <div class="field">
+                <label for="customerName">氏名</label>
+                <input type="text" id="customerName" placeholder="氏名を入力">
+            </div>
+            <div class="field">
+                <label for="contactInfo">連絡先</label>
+                <input type="text" id="contactInfo" placeholder="電話番号などを入力">
+            </div>
+            <div class="field">
+                <label for="emailAddress">メールアドレス</label>
+                <input type="email" id="emailAddress" placeholder="mail@example.com">
+            </div>
+            <div class="field">
+                <label for="loanDate">貸出日</label>
+                <input type="date" id="loanDate">
+            </div>
+            <div class="field">
+                <label for="returnDate">返却日</label>
+                <input type="date" id="returnDate">
+            </div>
+        </div>
+    </section>
+
+    <section class="panel media-block">
+        <div class="media-header">
+            <span class="meta-note">媒体名・発売日・備考はヘッダ情報として最大10行まで追加できます。</span>
+            <button type="button" id="addMediaRowButton" class="secondary">媒体情報を追加</button>
+        </div>
+        <div id="mediaRows" class="media-rows"></div>
+    </section>
+
+    <section class="panel search-block">
+        <label for="codeInput">品番</label>
+        <div class="search-row">
+            <input type="text" id="codeInput" inputmode="numeric" placeholder="品番を入力（8桁）" maxlength="8" autocomplete="off">
+            <span class="hint">半角数字8桁で入力して Enter で検索します。</span>
+        </div>
+        <div id="message" aria-live="polite"></div>
+        <div class="action-buttons">
+            <button type="button" id="exportButton" class="secondary">出力</button>
+            <button type="button" id="saveButton" class="primary">保存</button>
+        </div>
+    </section>
+
+    <section class="panel">
+        <div class="table-wrap">
+            <table>
+                <thead>
+                <tr>
+                    <th>品番</th>
+                    <th>タイトル</th>
+                    <th>価格</th>
+                    <th>税込価格</th>
+                    <th>クレジット</th>
+                </tr>
+                </thead>
+                <tbody id="resultTable">
+                <tr id="emptyRow">
+                    <td class="empty" colspan="5">まだ検索結果がありません。品番を入力して Enter で追加できます。</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</main>
+
+<div class="modal" id="saveModal" aria-hidden="true">
+    <div class="modal-card">
+        <h2>保存完了</h2>
+        <p id="saveModalMessage">伝票No.で保存しました</p>
+        <button type="button" id="closeModalButton" class="primary">閉じる</button>
+    </div>
+</div>
+
+<script>
+    const maxRows = 10;
+    const codeInput = document.getElementById("codeInput");
+    const resultTable = document.getElementById("resultTable");
+    const message = document.getElementById("message");
+    const emptyRowId = "emptyRow";
+    const saveButton = document.getElementById("saveButton");
+    const exportButton = document.getElementById("exportButton");
+    const addMediaRowButton = document.getElementById("addMediaRowButton");
+    const mediaRows = document.getElementById("mediaRows");
+    const slipNoLabel = document.getElementById("slipNoLabel");
+    const saveModal = document.getElementById("saveModal");
+    const saveModalMessage = document.getElementById("saveModalMessage");
+    const closeModalButton = document.getElementById("closeModalButton");
+
+    const staffNameInput = document.getElementById("staffName");
+    const customerNameInput = document.getElementById("customerName");
+    const contactInfoInput = document.getElementById("contactInfo");
+    const emailAddressInput = document.getElementById("emailAddress");
+    const loanDateInput = document.getElementById("loanDate");
+    const returnDateInput = document.getElementById("returnDate");
+
+    let currentSlipNo = "";
+
+    loanDateInput.value = new Date().toLocaleDateString("en-CA");
+    appendMediaRow();
+
+    codeInput.addEventListener("input", function () {
+        this.value = this.value.replace(/\D/g, "").slice(0, 8);
+    });
+
+    codeInput.addEventListener("keydown", async function (event) {
+        if (event.key !== "Enter") {
+            return;
+        }
+        event.preventDefault();
+        const code = this.value.trim();
+
+        if (!/^\d{8}$/.test(code)) {
+            setMessage("品番は8桁の半角数字で入力してください。", "error");
+            return;
+        }
+
+        if (document.querySelectorAll("#resultTable tr[data-detail-row='true']").length >= maxRows) {
+            setMessage("最大10行までです。", "error");
+            return;
+        }
+
+        setMessage("検索中です...", "");
+
+        try {
+            const response = await fetch(`/api/search?code=${encodeURIComponent(code)}`);
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+                throw new Error(data.message || "検索に失敗しました。");
+            }
+            appendResultRow(data);
+            this.value = "";
+            this.focus();
+            setMessage(`${code} を追加しました。`, "success");
+        } catch (error) {
+            setMessage(error.message || "検索に失敗しました。", "error");
+        }
+    });
+
+    addMediaRowButton.addEventListener("click", () => {
+        if (mediaRows.querySelectorAll("[data-media-row='true']").length >= maxRows) {
+            setMessage("媒体情報は最大10行までです。", "error");
+            return;
+        }
+        appendMediaRow();
+    });
+
+    saveButton.addEventListener("click", saveSlip);
+    exportButton.addEventListener("click", exportExcel);
+    closeModalButton.addEventListener("click", closeSaveModal);
+    saveModal.addEventListener("click", (event) => {
+        if (event.target === saveModal) {
+            closeSaveModal();
+        }
+    });
+
+    function appendMediaRow(values = {}) {
+        const row = document.createElement("div");
+        row.className = "media-row";
+        row.dataset.mediaRow = "true";
+        row.innerHTML = `
+            <div class="field">
+                <label>媒体名</label>
+                <input type="text" data-media-name value="${escapeHtml(values.mediaName ?? "")}">
+            </div>
+            <div class="field">
+                <label>発売日</label>
+                <input type="date" data-release-date value="${escapeHtml(values.releaseDate ?? "")}">
+            </div>
+            <div class="field">
+                <label>備考</label>
+                <input type="text" data-note value="${escapeHtml(values.note ?? "")}">
+            </div>
+            <button type="button" class="remove-btn" data-remove-media>削除</button>
+        `;
+
+        row.querySelector("[data-remove-media]").addEventListener("click", () => {
+            row.remove();
+            if (mediaRows.querySelectorAll("[data-media-row='true']").length === 0) {
+                appendMediaRow();
+            }
+        });
+
+        mediaRows.appendChild(row);
+    }
+
+    function appendResultRow(data) {
+        const emptyRow = document.getElementById(emptyRowId);
+        if (emptyRow) {
+            emptyRow.remove();
+        }
+
+        const taxIncludedPrice = parsePrice(data.price);
+        const basePrice = Number.isFinite(taxIncludedPrice) ? Math.ceil(taxIncludedPrice / 1.1) : "";
+        const taxIncludedDisplay = Number.isFinite(taxIncludedPrice) ? String(taxIncludedPrice) : String(data.price ?? "");
+        const row = document.createElement("tr");
+        row.dataset.detailRow = "true";
+        row.innerHTML = `
+            <td><input type="text" value="${escapeHtml(data.code ?? "")}"></td>
+            <td><input type="text" value="${escapeHtml(data.name ?? "")}"></td>
+            <td><input type="text" value="${escapeHtml(String(basePrice))}"></td>
+            <td><input type="text" value="${escapeHtml(taxIncludedDisplay)}"></td>
+            <td><input type="text" value=""></td>
+        `;
+        resultTable.appendChild(row);
+    }
+
+    async function saveSlip() {
+        const payload = buildSlipPayload();
+        if (!payload) {
+            return;
+        }
+
+        saveButton.disabled = true;
+        setMessage("保存中です...", "");
+
+        try {
+            const response = await fetch("/api/saveSlip", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+                throw new Error(data.message || "保存に失敗しました。");
+            }
+
+            currentSlipNo = data.slipNo || "";
+            slipNoLabel.textContent = currentSlipNo ? `伝票No.${currentSlipNo}` : "未保存";
+            openSaveModal(currentSlipNo);
+            setMessage(`伝票No.${currentSlipNo} で保存しました。`, "success");
+        } catch (error) {
+            setMessage(error.message || "保存に失敗しました。", "error");
+        } finally {
+            saveButton.disabled = false;
+        }
+    }
+
+    async function exportExcel() {
+        const payload = buildExcelPayload();
+        if (!payload) {
+            return;
+        }
+
+        exportButton.disabled = true;
+        setMessage("Excelを出力中です...", "");
+
+        try {
+            const response = await fetch("/api/export", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) {
+                throw new Error("Excel出力に失敗しました。");
+            }
+
+            const blob = await response.blob();
+            const disposition = response.headers.get("Content-Disposition") || "";
+            const match = disposition.match(/filename="?([^"]+)"?/);
+            const fileName = match ? match[1] : "slip_export.xlsx";
+
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = fileName;
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            URL.revokeObjectURL(url);
+
+            setMessage("Excelを出力しました。", "success");
+        } catch (error) {
+            setMessage(error.message || "Excel出力に失敗しました。", "error");
+        } finally {
+            exportButton.disabled = false;
+        }
+    }
+
+    function buildSlipPayload() {
+        const details = collectDetails();
+        if (!details.length) {
+            setMessage("保存する明細がありません。", "error");
+            return null;
+        }
+        if (!loanDateInput.value) {
+            setMessage("貸出日を入力してください。", "error");
+            return null;
+        }
+        return {
+            staffName: normalizeText(staffNameInput.value),
+            customerName: normalizeText(customerNameInput.value),
+            contactInfo: normalizeText(contactInfoInput.value),
+            emailAddress: normalizeText(emailAddressInput.value),
+            loanDate: loanDateInput.value,
+            returnDate: normalizeText(returnDateInput.value) || null,
+            details: details,
+            mediaEntries: collectMediaEntries()
+        };
+    }
+
+    function buildExcelPayload() {
+        const details = collectDetailsForExcel();
+        if (!details.length) {
+            setMessage("出力する明細がありません。", "error");
+            return null;
+        }
+        return {
+            slipNo: currentSlipNo,
+            staffName: normalizeText(staffNameInput.value),
+            customerName: normalizeText(customerNameInput.value),
+            contactInfo: normalizeText(contactInfoInput.value),
+            emailAddress: normalizeText(emailAddressInput.value),
+            loanDate: loanDateInput.value || null,
+            returnDate: normalizeText(returnDateInput.value) || null,
+            details: details,
+            mediaEntries: collectMediaEntries()
+        };
+    }
+
+    function collectDetails() {
+        return Array.from(document.querySelectorAll("#resultTable tr[data-detail-row='true']")).map((row) => {
+            const inputs = row.querySelectorAll("input");
+            return {
+                code: normalizeText(inputs[0].value),
+                name: normalizeText(inputs[1].value),
+                price: toNullableInt(inputs[2].value),
+                taxPrice: toNullableInt(inputs[3].value),
+                credit: normalizeText(inputs[4].value)
+            };
+        });
+    }
+
+    function collectDetailsForExcel() {
+        return Array.from(document.querySelectorAll("#resultTable tr[data-detail-row='true']")).map((row) => {
+            const inputs = row.querySelectorAll("input");
+            return {
+                credit: normalizeText(inputs[4].value),
+                code: normalizeText(inputs[0].value),
+                name: normalizeText(inputs[1].value),
+                price: toNullableInt(inputs[2].value),
+                taxPrice: toNullableInt(inputs[3].value),
+                mediaName: "",
+                releaseDate: null,
+                note: ""
+            };
+        });
+    }
+
+    function collectMediaEntries() {
+        return Array.from(document.querySelectorAll("[data-media-row='true']")).map((row) => ({
+            mediaName: normalizeText(row.querySelector("[data-media-name]").value),
+            releaseDate: normalizeText(row.querySelector("[data-release-date]").value) || null,
+            note: normalizeText(row.querySelector("[data-note]").value)
+        }));
+    }
+
+    function openSaveModal(slipNo) {
+        saveModalMessage.textContent = `伝票No.${slipNo}で保存しました`;
+        saveModal.classList.add("is-open");
+        saveModal.setAttribute("aria-hidden", "false");
+    }
+
+    function closeSaveModal() {
+        saveModal.classList.remove("is-open");
+        saveModal.setAttribute("aria-hidden", "true");
+    }
+
+    function parsePrice(value) {
+        const normalized = String(value ?? "").replace(/,/g, "").trim();
+        const parsed = Number.parseFloat(normalized);
+        return Number.isFinite(parsed) ? parsed : NaN;
+    }
+
+    function toNullableInt(value) {
+        const normalized = String(value ?? "").replace(/,/g, "").trim();
+        if (!normalized) {
+            return null;
+        }
+        const parsed = Number.parseInt(normalized, 10);
+        return Number.isFinite(parsed) ? parsed : null;
+    }
+
+    function normalizeText(value) {
+        return String(value ?? "").trim();
+    }
+
+    function setMessage(text, state) {
+        message.textContent = text;
+        if (state) {
+            message.dataset.state = state;
+        } else {
+            delete message.dataset.state;
+        }
+    }
+
+    function escapeHtml(value) {
+        return String(value)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#39;");
+    }
+</script>
+</body>
+</html>
