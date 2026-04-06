@@ -26,6 +26,9 @@ public class GoogleSheetsService {
 
     private static final String APPLICATION_NAME = "Spring Boot Sheets";
     private static final JsonFactory JSON_FACTORY = GsonFactory.getDefaultInstance();
+    private static final int CODE_COLUMN_INDEX = 0;
+    private static final int TITLE_COLUMN_INDEX = 2;
+    private static final int PRICE_COLUMN_INDEX = 8;
 
     private final String spreadsheetId;
     private final String range;
@@ -45,7 +48,7 @@ public class GoogleSheetsService {
         return rows.stream()
                 .skip(1)
                 .filter(row -> !row.isEmpty())
-                .filter(row -> code.equals(String.valueOf(row.get(0)).trim()))
+                .filter(row -> code.equals(String.valueOf(row.get(CODE_COLUMN_INDEX)).trim()))
                 .findFirst()
                 .map(this::toResponse);
     }
@@ -77,9 +80,9 @@ public class GoogleSheetsService {
 
     private SheetSearchResponse toResponse(List<Object> row) {
         return new SheetSearchResponse(
-                getCellValue(row, 0),
-                getCellValue(row, 1),
-                getCellValue(row, 2));
+                getCellValue(row, CODE_COLUMN_INDEX),
+                getCellValue(row, TITLE_COLUMN_INDEX),
+                getCellValue(row, PRICE_COLUMN_INDEX));
     }
 
     private String getCellValue(List<Object> row, int index) {

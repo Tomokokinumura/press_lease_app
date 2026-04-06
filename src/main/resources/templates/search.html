@@ -275,19 +275,28 @@
             emptyRow.remove();
         }
 
-        const priceValue = Number.parseFloat(String(data.price).replace(/,/g, ""));
-        const taxPrice = Number.isFinite(priceValue) ? Math.floor(priceValue * 1.1) : "";
+        const taxIncludedPrice = parsePrice(data.price);
+        const basePrice = Number.isFinite(taxIncludedPrice) ? Math.ceil(taxIncludedPrice / 1.1) : "";
+        const taxIncludedDisplay = Number.isFinite(taxIncludedPrice)
+            ? String(taxIncludedPrice)
+            : String(data.price ?? "");
         const row = document.createElement("tr");
 
         row.innerHTML = `
             <td><input type="text" value=""></td>
             <td><input type="text" value="${escapeHtml(data.code ?? "")}"></td>
             <td><input type="text" value="${escapeHtml(data.name ?? "")}"></td>
-            <td><input type="text" value="${escapeHtml(data.price ?? "")}"></td>
-            <td><input type="text" value="${escapeHtml(String(taxPrice))}"></td>
+            <td><input type="text" value="${escapeHtml(String(basePrice))}"></td>
+            <td><input type="text" value="${escapeHtml(taxIncludedDisplay)}"></td>
         `;
 
         resultTable.appendChild(row);
+    }
+
+    function parsePrice(value) {
+        const normalized = String(value ?? "").replace(/,/g, "").trim();
+        const parsed = Number.parseFloat(normalized);
+        return Number.isFinite(parsed) ? parsed : NaN;
     }
 
     function setMessage(text, state) {
