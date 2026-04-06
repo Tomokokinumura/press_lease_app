@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="ja" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>品番検索</title>
+    <style>
+        :root {
+            --bg: #f5f1e8;
+            --panel: #fffdf8;
+            --line: #d4c6ad;
+            --text: #2d2418;
+            --muted: #756650;
+            --accent: #b85c38;
+            --accent-soft: #f3dfd4;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: "Yu Gothic UI", "Hiragino Sans", sans-serif;
+            color: var(--text);
+            background:
+                radial-gradient(circle at top left, #fff7e8, transparent 32%),
+                linear-gradient(180deg, #f6efe2 0%, #efe4d2 100%);
+            padding: 32px 20px 48px;
+        }
+        .page { max-width: 1180px; margin: 0 auto; }
+        .hero {
+            background: rgba(255, 253, 248, 0.88);
+            border: 1px solid rgba(212, 198, 173, 0.7);
+            border-radius: 24px;
+            padding: 28px;
+            box-shadow: 0 18px 45px rgba(88, 62, 30, 0.08);
+            backdrop-filter: blur(6px);
+        }
+        .eyebrow {
+            margin: 0 0 8px;
+            color: var(--accent);
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+        h1 { margin: 0; font-size: clamp(28px, 4vw, 44px); line-height: 1.1; }
+        .intro { margin: 14px 0 0; color: var(--muted); line-height: 1.7; }
+        .header-panel, .search-panel { margin-top: 22px; display: grid; gap: 10px; }
+        .header-grid { display: grid; grid-template-columns: repeat(3, minmax(180px, 1fr)); gap: 14px; }
+        .field { display: grid; gap: 8px; }
+        label { font-size: 14px; font-weight: 700; }
+        .search-row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+        #codeInput, .field input, .toolbar button {
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            padding: 12px 14px;
+            font-size: 15px;
+            background: #fff;
+            color: var(--text);
+        }
+        #codeInput { width: min(360px, 100%); font-size: 18px; letter-spacing: 0.08em; }
+        .hint, #message, .toolbar-note { font-size: 14px; color: var(--muted); }
+        #message[data-state="error"] { color: #b42318; }
+        #message[data-state="success"] { color: #1d6f42; }
+        .toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 18px;
+        }
+        .toolbar button {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: #fff;
+            cursor: pointer;
+            font-weight: 700;
+        }
+        .toolbar button:disabled { opacity: 0.6; cursor: wait; }
+        .table-wrap {
+            margin-top: 24px;
+            overflow-x: auto;
+            background: var(--panel);
+            border: 1px solid rgba(212, 198, 173, 0.7);
+            border-radius: 22px;
+            box-shadow: 0 18px 45px rgba(88, 62, 30, 0.08);
+        }
+        table { width: 100%; border-collapse: collapse; min-width: 1180px; }
+        thead th {
+            background: var(--accent-soft);
+            color: var(--text);
+            font-size: 14px;
+            font-weight: 700;
+            text-align: left;
+            padding: 16px;
+            border-bottom: 1px solid var(--line);
+        }
+        tbody td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #efe5d6;
+            background: rgba(255, 255, 255, 0.82);
+        }
+        tbody input {
+            width: 100%;
+            border: 1px solid transparent;
+            background: transparent;
+            padding: 10px 12px;
+            border-radius: 10px;
+            font-size: 15px;
+            color: var(--text);
+        }
+        tbody input:focus, #codeInput:focus, .field input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(184, 92, 56, 0.1);
+            background: #fff;
+        }
+        .empty { padding: 36px 20px; text-align: center; color: var(--muted); }
+        @media (max-width: 900px) {
+            .header-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+<!-- 蜩∫分讀懃ｴ｢ -->
+<main class="page">
+    <section class="hero">
+        <p class="eyebrow">Google Sheets Search</p>
+        <h1>品番検索</h1>
+        <p class="intro">8桁の品番を入力して Enter を押すと、Google Sheets からデータを取得して一覧へ追加します。伝票ヘッダを入力し、最大10行までまとめて保存できます。</p>
+
+        <div class="header-panel">
+            <div class="header-grid">
+                <div class="field">
+                    <label for="staffName">担当者名</label>
+                    <input type="text" id="staffName" placeholder="担当者名を入力">
+                </div>
+                <div class="field">
+                    <label for="loanDate">貸出日</label>
+                    <input type="date" id="loanDate">
+                </div>
+                <div class="field">
+                    <label for="returnDate">返却日</label>
+                    <input type="date" id="returnDate">
+                </div>
+            </div>
+        </div>
+
+        <div class="search-panel">
+            <label for="codeInput">品番</label>
+            <div class="search-row">
+                <input type="text" id="codeInput" inputmode="numeric" placeholder="品番を入力（8桁）" maxlength="8" autocomplete="off">
+                <span class="hint">半角数字8桁で入力してください</span>
+            </div>
+            <div id="message" aria-live="polite"></div>
+        </div>
+
+        <div class="toolbar">
+            <span class="toolbar-note">明細は最大10行まで保存できます。</span>
+            <button type="button" id="saveButton">保存</button>
+        </div>
+    </section>
+
+    <section class="table-wrap">
+        <table>
+            <thead>
+            <tr>
+                <th>品番</th>
+                <th>タイトル</th>
+                <th>価格</th>
+                <th>税込価格</th>
+                <th>媒体名</th>
+                <th>発売日</th>
+                <th>備考</th>
+                <th>クレジット</th>
+            </tr>
+            </thead>
+            <tbody id="resultTable">
+            <tr id="emptyRow">
+                <td class="empty" colspan="8">まだ検索結果がありません。品番を入力して Enter で追加できます。</td>
+            </tr>
+            </tbody>
+        </table>
+    </section>
+</main>
+<script>
+    const codeInput = document.getElementById("codeInput");
+    const resultTable = document.getElementById("resultTable");
+    const message = document.getElementById("message");
+    const emptyRowId = "emptyRow";
+    const saveButton = document.getElementById("saveButton");
+    const staffNameInput = document.getElementById("staffName");
+    const loanDateInput = document.getElementById("loanDate");
+    const returnDateInput = document.getElementById("returnDate");
+
+    loanDateInput.value = new Date().toLocaleDateString("en-CA");
+
+    codeInput.addEventListener("input", function () {
+        this.value = this.value.replace(/\D/g, "").slice(0, 8);
+    });
+
+    codeInput.addEventListener("keydown", async function (event) {
+        if (event.key !== "Enter") {
+            return;
+        }
+
+        event.preventDefault();
+        const code = this.value.trim();
+
+        if (!/^\d{8}$/.test(code)) {
+            setMessage("品番は8桁の半角数字で入力してください。", "error");
+            return;
+        }
+
+        if (document.querySelectorAll("#resultTable tr[data-detail-row='true']").length >= 10) {
+            setMessage("最大10行までです。", "error");
+            return;
+        }
+
+        setMessage("検索中です...", "");
+
+        try {
+            const response = await fetch(`/api/search?code=${encodeURIComponent(code)}`);
+            const data = await response.json().catch(() => ({}));
+
+            if (!response.ok) {
+                throw new Error(data.message || "検索に失敗しました。");
+            }
+
+            appendResultRow(data);
+            this.value = "";
+            this.focus();
+            setMessage(`${code} を追加しました。`, "success");
+        } catch (error) {
+            setMessage(error.message || "検索に失敗しました。", "error");
+        }
+    });
+
+    saveButton.addEventListener("click", saveSlip);
+
+    function appendResultRow(data) {
+        const emptyRow = document.getElementById(emptyRowId);
+        if (emptyRow) {
+            emptyRow.remove();
+        }
+
+        const taxIncludedPrice = parsePrice(data.price);
+        const basePrice = Number.isFinite(taxIncludedPrice) ? Math.ceil(taxIncludedPrice / 1.1) : "";
+        const taxIncludedDisplay = Number.isFinite(taxIncludedPrice)
+            ? String(taxIncludedPrice)
+            : String(data.price ?? "");
+
+        const row = document.createElement("tr");
+        row.dataset.detailRow = "true";
+        row.innerHTML = `
+            <td><input type="text" value="${escapeHtml(data.code ?? "")}"></td>
+            <td><input type="text" value="${escapeHtml(data.name ?? "")}"></td>
+            <td><input type="text" value="${escapeHtml(String(basePrice))}"></td>
+            <td><input type="text" value="${escapeHtml(taxIncludedDisplay)}"></td>
+            <td><input type="text" value=""></td>
+            <td><input type="date" value=""></td>
+            <td><input type="text" value=""></td>
+            <td><input type="text" value=""></td>
+        `;
+
+        resultTable.appendChild(row);
+    }
+
+    async function saveSlip() {
+        const rows = Array.from(document.querySelectorAll("#resultTable tr[data-detail-row='true']"));
+
+        if (rows.length === 0) {
+            setMessage("保存する明細がありません。", "error");
+            return;
+        }
+
+        if (!loanDateInput.value) {
+            setMessage("貸出日を入力してください。", "error");
+            return;
+        }
+
+        saveButton.disabled = true;
+        setMessage("保存中です...", "");
+
+        const details = rows.map((row) => {
+            const inputs = row.querySelectorAll("input");
+            return {
+                code: normalizeText(inputs[0].value),
+                name: normalizeText(inputs[1].value),
+                price: toNullableInt(inputs[2].value),
+                taxPrice: toNullableInt(inputs[3].value),
+                mediaName: normalizeText(inputs[4].value),
+                releaseDate: normalizeText(inputs[5].value) || null,
+                note: normalizeText(inputs[6].value),
+                credit: normalizeText(inputs[7].value)
+            };
+        });
+
+        try {
+            const response = await fetch("/api/saveSlip", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    staffName: normalizeText(staffNameInput.value),
+                    loanDate: loanDateInput.value,
+                    returnDate: normalizeText(returnDateInput.value) || null,
+                    details: details
+                })
+            });
+
+            const data = await response.json().catch(() => ({}));
+
+            if (!response.ok) {
+                throw new Error(data.message || "保存に失敗しました。");
+            }
+
+            setMessage(`伝票番号 ${data.slipNo} で保存しました。`, "success");
+        } catch (error) {
+            setMessage(error.message || "保存に失敗しました。", "error");
+        } finally {
+            saveButton.disabled = false;
+        }
+    }
+
+    function parsePrice(value) {
+        const normalized = String(value ?? "").replace(/,/g, "").trim();
+        const parsed = Number.parseFloat(normalized);
+        return Number.isFinite(parsed) ? parsed : NaN;
+    }
+
+    function toNullableInt(value) {
+        const normalized = String(value ?? "").replace(/,/g, "").trim();
+        if (!normalized) {
+            return null;
+        }
+        const parsed = Number.parseInt(normalized, 10);
+        return Number.isFinite(parsed) ? parsed : null;
+    }
+
+    function normalizeText(value) {
+        return String(value ?? "").trim();
+    }
+
+    function setMessage(text, state) {
+        message.textContent = text;
+        if (state) {
+            message.dataset.state = state;
+        } else {
+            delete message.dataset.state;
+        }
+    }
+
+    function escapeHtml(value) {
+        return String(value)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#39;");
+    }
+</script>
+</body>
+</html>

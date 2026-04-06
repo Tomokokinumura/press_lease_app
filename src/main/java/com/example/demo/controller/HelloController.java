@@ -15,6 +15,6 @@ public class HelloController {
 
     @GetMapping("/search")
     public String showSearchPage() {
-        return "search";
+        return "search-ledger";
     }
 }

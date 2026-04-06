@@ -21,8 +21,12 @@ import org.springframework.test.web.servlet.MockMvc;
 import com.example.demo.controller.HelloController;
 import com.example.demo.controller.SheetController;
 import com.example.demo.dto.SheetSearchResponse;
+import com.example.demo.mapper.SlipDetailMapper;
+import com.example.demo.mapper.SlipMapper;
+import com.example.demo.mapper.SlipMediaMapper;
 import com.example.demo.mapper.TodoMapper;
 import com.example.demo.service.GoogleSheetsService;
+import com.example.demo.service.SlipService;
 
 @WebMvcTest({HelloController.class, SheetController.class})
 class DemoApplicationTests {
@@ -34,7 +38,19 @@ class DemoApplicationTests {
 	private TodoMapper todoMapper;
 
 	@MockBean
+	private SlipMapper slipMapper;
+
+	@MockBean
+	private SlipDetailMapper slipDetailMapper;
+
+	@MockBean
+	private SlipMediaMapper slipMediaMapper;
+
+	@MockBean
 	private GoogleSheetsService googleSheetsService;
+
+	@MockBean
+	private SlipService slipService;
 
 	@Test
 	void helloPageReturnsExpectedMessage() throws Exception {
@@ -49,7 +65,7 @@ class DemoApplicationTests {
 	void searchPageLoads() throws Exception {
 		mockMvc.perform(get("/search"))
 				.andExpect(status().isOk())
-				.andExpect(view().name("search"))
+				.andExpect(view().name("search-ledger"))
 				.andExpect(content().string(Matchers.containsString("品番検索")));
 	}
 

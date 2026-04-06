@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.example.demo.mapper.SlipMapper">
+
+    <select id="countByMonth" resultType="int">
+        SELECT COUNT(*)
+        FROM slip
+        WHERE slip_no LIKE CONCAT(#{ym}, '%')
+    </select>
+
+    <insert id="insert" parameterType="com.example.demo.entity.Slip" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO slip (
+            slip_no,
+            staff_name,
+            loan_date,
+            return_date
+        ) VALUES (
+            #{slipNo},
+            #{staffName},
+            #{loanDate},
+            #{returnDate}
+        )
+    </insert>
+
+</mapper>
