@@ -73,7 +73,7 @@
                d.returned
         FROM slip s
         JOIN slip_detail d ON s.id = d.slip_id
-        WHERE s.slip_no = #{slipNo}
+        WHERE s.slip_no LIKE CONCAT(#{slipNo}, '%')
         ORDER BY d.id
     </select>
 
@@ -95,7 +95,7 @@
                d.returned
         FROM slip s
         JOIN slip_detail d ON s.id = d.slip_id
-        WHERE d.code = #{code}
+        WHERE d.code LIKE CONCAT(#{code}, '%')
         ORDER BY s.slip_no, d.id
     </select>
 
