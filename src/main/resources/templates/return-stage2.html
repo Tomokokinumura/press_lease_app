@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="ja" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>返却登録</title>
+    <style>
+        :root {
+            --bg: #f6f1e8;
+            --panel: rgba(255, 253, 248, 0.94);
+            --line: #d9ccb7;
+            --text: #2d2418;
+            --muted: #756650;
+            --accent: #b85c38;
+            --accent-dark: #8f4528;
+            --surface: #fcf7f0;
+            --success: #1d6f42;
+            --error: #b42318;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: "Yu Gothic UI", "Hiragino Sans", sans-serif;
+            color: var(--text);
+            background:
+                radial-gradient(circle at top left, #fff8ea, transparent 32%),
+                linear-gradient(180deg, #f6efe2 0%, #efe4d2 100%);
+            padding: 24px;
+        }
+        .page {
+            max-width: 1180px;
+            margin: 0 auto;
+            display: grid;
+            gap: 20px;
+        }
+        .panel {
+            background: var(--panel);
+            border: 1px solid var(--line);
+            border-radius: 22px;
+            padding: 24px;
+            box-shadow: 0 18px 40px rgba(88, 62, 30, 0.08);
+        }
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .topbar a {
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 700;
+        }
+        h1 {
+            margin: 10px 0 0;
+            font-size: clamp(28px, 4vw, 40px);
+        }
+        .intro {
+            margin: 10px 0 0;
+            color: var(--muted);
+            line-height: 1.7;
+        }
+        .search-row {
+            display: flex;
+            gap: 12px;
+            align-items: end;
+            flex-wrap: wrap;
+        }
+        .field {
+            display: grid;
+            gap: 8px;
+            min-width: min(320px, 100%);
+        }
+        label {
+            font-size: 14px;
+            font-weight: 700;
+        }
+        input, button {
+            font: inherit;
+        }
+        input[type="text"] {
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            padding: 12px 14px;
+            background: #fff;
+            color: var(--text);
+        }
+        input[type="text"]:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(184, 92, 56, 0.12);
+        }
+        button {
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            padding: 12px 18px;
+            cursor: pointer;
+            font-weight: 700;
+        }
+        .primary {
+            background: var(--accent);
+            border-color: var(--accent-dark);
+            color: #fff;
+        }
+        .secondary {
+            background: var(--surface);
+            color: var(--text);
+        }
+        .actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        #message {
+            min-height: 24px;
+            color: var(--muted);
+            font-size: 14px;
+        }
+        #message[data-state="error"] { color: var(--error); }
+        #message[data-state="success"] { color: var(--success); }
+        .table-wrap {
+            overflow-x: auto;
+            border: 1px solid var(--line);
+            border-radius: 18px;
+            background: #fffdf8;
+        }
+        table {
+            width: 100%;
+            min-width: 760px;
+            border-collapse: collapse;
+        }
+        thead th {
+            background: #efe1cf;
+            text-align: left;
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--line);
+        }
+        tbody td {
+            padding: 12px 16px;
+            border-bottom: 1px solid #efe5d6;
+            vertical-align: middle;
+        }
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+        .empty {
+            padding: 28px;
+            text-align: center;
+            color: var(--muted);
+        }
+        .checkbox-cell {
+            width: 90px;
+        }
+        .checkbox-cell input {
+            width: 18px;
+            height: 18px;
+        }
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 10px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 700;
+            background: #f5eadf;
+            color: var(--muted);
+        }
+        .status-badge.is-returned {
+            background: #e5f3ea;
+            color: var(--success);
+        }
+        @media (max-width: 700px) {
+            .search-row {
+                align-items: stretch;
+            }
+            .field {
+                min-width: 100%;
+            }
+            .search-row button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+<main class="page">
+    <section class="panel">
+        <div class="topbar">
+            <a href="/">トップへ戻る</a>
+            <span>返却済み管理</span>
+        </div>
+        <h1>返却登録</h1>
+        <p class="intro">伝票番号で明細を呼び出し、返却済みチェックを更新します。チェックを入れた行は返却済み、外した行は未返却として保存されます。</p>
+    </section>
+
+    <section class="panel">
+        <div class="search-row">
+            <div class="field">
+                <label for="slipNo">伝票No</label>
+                <input type="text" id="slipNo" placeholder="例: 202604001" autocomplete="off">
+            </div>
+            <button type="button" id="searchButton" class="secondary">検索</button>
+        </div>
+        <div id="message" aria-live="polite"></div>
+    </section>
+
+    <section class="panel">
+        <div class="table-wrap">
+            <table>
+                <thead>
+                <tr>
+                    <th>返却済み</th>
+                    <th>品番</th>
+                    <th>タイトル</th>
+                    <th>価格</th>
+                    <th>税込価格</th>
+                    <th>クレジット</th>
+                    <th>状態</th>
+                </tr>
+                </thead>
+                <tbody id="resultTable">
+                <tr id="emptyRow">
+                    <td colspan="7" class="empty">伝票Noを入力して検索してください。</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="actions" style="margin-top: 16px;">
+            <button type="button" id="updateButton" class="primary">更新</button>
+        </div>
+    </section>
+</main>
+
+<script>
+    const slipNoInput = document.getElementById("slipNo");
+    const searchButton = document.getElementById("searchButton");
+    const updateButton = document.getElementById("updateButton");
+    const resultTable = document.getElementById("resultTable");
+    const message = document.getElementById("message");
+
+    searchButton.addEventListener("click", searchSlip);
+    updateButton.addEventListener("click", updateReturn);
+    slipNoInput.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") {
+            event.preventDefault();
+            searchSlip();
+        }
+    });
+
+    async function searchSlip() {
+        const slipNo = slipNoInput.value.trim();
+        if (!slipNo) {
+            setMessage("伝票Noを入力してください。", "error");
+            return;
+        }
+
+        searchButton.disabled = true;
+        setMessage("検索中です...", "");
+
+        try {
+            const response = await fetch(`/api/return?slipNo=${encodeURIComponent(slipNo)}`);
+            const data = await response.json().catch(() => []);
+            if (!response.ok) {
+                throw new Error("返却情報の取得に失敗しました。");
+            }
+
+            renderRows(Array.isArray(data) ? data : []);
+            if (data.length === 0) {
+                setMessage("該当する明細が見つかりませんでした。", "error");
+            } else {
+                setMessage(`${data.length}件の明細を表示しました。`, "success");
+            }
+        } catch (error) {
+            renderRows([]);
+            setMessage(error.message || "返却情報の取得に失敗しました。", "error");
+        } finally {
+            searchButton.disabled = false;
+        }
+    }
+
+    async function updateReturn() {
+        const rows = Array.from(document.querySelectorAll("#resultTable tr[data-detail-id]"));
+        if (!rows.length) {
+            setMessage("更新対象の明細がありません。", "error");
+            return;
+        }
+
+        const payload = rows.map((row) => ({
+            id: Number(row.dataset.detailId),
+            returned: row.querySelector("input[type='checkbox']").checked
+        }));
+
+        updateButton.disabled = true;
+        setMessage("更新中です...", "");
+
+        try {
+            const response = await fetch("/api/return/update", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) {
+                throw new Error("返却状態の更新に失敗しました。");
+            }
+
+            rows.forEach((row) => {
+                const checked = row.querySelector("input[type='checkbox']").checked;
+                row.querySelector("[data-status]").innerHTML = checked
+                    ? '<span class="status-badge is-returned">返却済み</span>'
+                    : '<span class="status-badge">未返却</span>';
+            });
+
+            setMessage("返却状態を更新しました。", "success");
+        } catch (error) {
+            setMessage(error.message || "返却状態の更新に失敗しました。", "error");
+        } finally {
+            updateButton.disabled = false;
+        }
+    }
+
+    function renderRows(details) {
+        if (!details.length) {
+            resultTable.innerHTML = '<tr id="emptyRow"><td colspan="7" class="empty">該当データがありません。</td></tr>';
+            return;
+        }
+
+        resultTable.innerHTML = details.map((detail) => {
+            const returned = Boolean(detail.returned);
+            return `
+                <tr data-detail-id="${escapeHtml(String(detail.id ?? ""))}">
+                    <td class="checkbox-cell"><input type="checkbox" ${returned ? "checked" : ""}></td>
+                    <td>${escapeHtml(detail.code ?? "")}</td>
+                    <td>${escapeHtml(detail.name ?? "")}</td>
+                    <td>${escapeHtml(formatNumber(detail.price))}</td>
+                    <td>${escapeHtml(formatNumber(detail.taxPrice))}</td>
+                    <td>${escapeHtml(detail.credit ?? "")}</td>
+                    <td data-status>${returned
+                        ? '<span class="status-badge is-returned">返却済み</span>'
+                        : '<span class="status-badge">未返却</span>'}</td>
+                </tr>
+            `;
+        }).join("");
+    }
+
+    function formatNumber(value) {
+        if (value === null || value === undefined || value === "") {
+            return "";
+        }
+        const parsed = Number(value);
+        return Number.isFinite(parsed) ? parsed.toLocaleString("ja-JP") : String(value);
+    }
+
+    function setMessage(text, state) {
+        message.textContent = text;
+        if (state) {
+            message.dataset.state = state;
+        } else {
+            delete message.dataset.state;
+        }
+    }
+
+    function escapeHtml(value) {
+        return String(value)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#39;");
+    }
+</script>
+</body>
+</html>

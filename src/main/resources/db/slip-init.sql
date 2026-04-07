@@ -21,6 +21,8 @@ CREATE TABLE IF NOT EXISTS slip_detail (
     media_name VARCHAR(100),
     release_date DATE,
     note VARCHAR(255),
+    returned BOOLEAN DEFAULT FALSE,
+    returned_date DATE,
     CONSTRAINT fk_slip_detail_slip
         FOREIGN KEY (slip_id) REFERENCES slip(id)
 );

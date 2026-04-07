@@ -13,7 +13,7 @@ public class TopController {
 
     @GetMapping("/return")
     public String returnPage() {
-        return "return";
+        return "return-stage2";
     }
 
     @GetMapping("/slip-search")

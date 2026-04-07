@@ -14,6 +14,8 @@ public class SlipDetail {
     private String mediaName;
     private LocalDate releaseDate;
     private String note;
+    private Boolean returned;
+    private LocalDate returnedDate;
 
     public Integer getId() {
         return id;
@@ -93,5 +95,21 @@ public class SlipDetail {
 
     public void setNote(String note) {
         this.note = note;
+    }
+
+    public Boolean getReturned() {
+        return returned;
+    }
+
+    public void setReturned(Boolean returned) {
+        this.returned = returned;
+    }
+
+    public LocalDate getReturnedDate() {
+        return returnedDate;
+    }
+
+    public void setReturnedDate(LocalDate returnedDate) {
+        this.returnedDate = returnedDate;
     }
 }

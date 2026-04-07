@@ -29,4 +29,30 @@
         )
     </insert>
 
+    <select id="findBySlipNo" resultType="com.example.demo.entity.SlipDetail">
+        SELECT d.id,
+               d.slip_id,
+               d.code,
+               d.name,
+               d.price,
+               d.tax_price,
+               d.credit,
+               d.media_name,
+               d.release_date,
+               d.note,
+               d.returned,
+               d.returned_date
+        FROM slip_detail d
+        JOIN slip s ON d.slip_id = s.id
+        WHERE s.slip_no = #{slipNo}
+        ORDER BY d.id
+    </select>
+
+    <update id="updateReturn" parameterType="com.example.demo.entity.SlipDetail">
+        UPDATE slip_detail
+        SET returned = #{returned},
+            returned_date = #{returnedDate}
+        WHERE id = #{id}
+    </update>
+
 </mapper>
