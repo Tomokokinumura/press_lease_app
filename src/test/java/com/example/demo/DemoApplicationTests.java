@@ -7,6 +7,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 
@@ -25,13 +26,16 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import com.example.demo.controller.ExcelExportController;
 import com.example.demo.controller.HelloController;
+import com.example.demo.controller.MasterController;
 import com.example.demo.controller.ReturnApiController;
 import com.example.demo.controller.SheetController;
 import com.example.demo.controller.SlipSearchApiController;
 import com.example.demo.controller.TopController;
 import com.example.demo.dto.SheetSearchResponse;
 import com.example.demo.dto.SlipDetailDto;
+import com.example.demo.entity.MasterSetting;
 import com.example.demo.entity.SlipDetail;
+import com.example.demo.mapper.MasterSettingMapper;
 import com.example.demo.mapper.SlipDetailMapper;
 import com.example.demo.mapper.SlipMapper;
 import com.example.demo.mapper.SlipMediaMapper;
@@ -42,6 +46,7 @@ import com.example.demo.service.SlipService;
 @WebMvcTest({
         HelloController.class,
         TopController.class,
+        MasterController.class,
         ExcelExportController.class,
         SheetController.class,
         ReturnApiController.class,
@@ -63,6 +68,9 @@ class DemoApplicationTests {
 
     @MockBean
     private SlipMediaMapper slipMediaMapper;
+
+    @MockBean
+    private MasterSettingMapper masterSettingMapper;
 
     @MockBean
     private GoogleSheetsService googleSheetsService;
@@ -109,6 +117,38 @@ class DemoApplicationTests {
                 .andExpect(status().isOk())
                 .andExpect(view().name("slip-search-stage3"))
                 .andExpect(content().string(Matchers.containsString("searchSlipButton")));
+    }
+
+    @Test
+    void masterPageLoads() throws Exception {
+        MasterSetting setting = new MasterSetting();
+        setting.setId(1);
+        setting.setMasterText("固定文言");
+        given(masterSettingMapper.find()).willReturn(setting);
+
+        mockMvc.perform(get("/master"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("master"))
+                .andExpect(model().attributeExists("master"))
+                .andExpect(content().string(Matchers.containsString("masterText")));
+    }
+
+    @Test
+    void masterUpdateRedirectsToMasterPage() throws Exception {
+        MasterSetting setting = new MasterSetting();
+        setting.setId(1);
+        setting.setMasterText("before");
+        given(masterSettingMapper.find()).willReturn(setting);
+
+        mockMvc.perform(post("/master/update")
+                        .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                        .param("id", "1")
+                        .param("masterText", "updated text"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/master"));
+
+        verify(masterSettingMapper).update(ArgumentMatchers.argThat(master ->
+                master.getId() == 1 && "updated text".equals(master.getMasterText())));
     }
 
     @Test

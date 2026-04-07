@@ -20,9 +20,4 @@ public class TopController {
     public String slipSearchPage() {
         return "slip-search-stage3";
     }
-
-    @GetMapping("/master")
-    public String masterPage() {
-        return "master";
-    }
 }

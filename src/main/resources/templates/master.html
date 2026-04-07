@@ -1,13 +1,120 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="ja" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>マスタ変更</title>
+    <style>
+        :root {
+            --line: #d9ccb7;
+            --text: #2d2418;
+            --muted: #756650;
+            --accent: #b85c38;
+            --accent-dark: #8f4528;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: "Yu Gothic UI", "Hiragino Sans", sans-serif;
+            color: var(--text);
+            background:
+                radial-gradient(circle at top left, #fff8ea, transparent 32%),
+                linear-gradient(180deg, #f6efe2 0%, #efe4d2 100%);
+            padding: 24px;
+        }
+        .page {
+            max-width: 900px;
+            margin: 0 auto;
+            display: grid;
+            gap: 20px;
+        }
+        .panel {
+            background: rgba(255, 253, 248, 0.94);
+            border: 1px solid var(--line);
+            border-radius: 22px;
+            padding: 24px;
+            box-shadow: 0 18px 40px rgba(88, 62, 30, 0.08);
+        }
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .topbar a {
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 700;
+        }
+        h1 {
+            margin: 10px 0 0;
+            font-size: clamp(28px, 4vw, 40px);
+        }
+        p {
+            color: var(--muted);
+            line-height: 1.7;
+        }
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+        textarea {
+            width: 100%;
+            min-height: 280px;
+            border: 1px solid var(--line);
+            border-radius: 16px;
+            padding: 14px 16px;
+            resize: vertical;
+            font: inherit;
+            color: var(--text);
+            background: #fff;
+        }
+        textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(184, 92, 56, 0.12);
+        }
+        .actions {
+            margin-top: 16px;
+            display: flex;
+            justify-content: flex-end;
+        }
+        button {
+            border: 1px solid var(--accent-dark);
+            border-radius: 14px;
+            padding: 12px 22px;
+            background: var(--accent);
+            color: #fff;
+            cursor: pointer;
+            font: inherit;
+            font-weight: 700;
+        }
+    </style>
 </head>
 <body>
-<h1>マスタ変更</h1>
-<p>この画面は次の段階で実装します。</p>
-<p><a href="/">トップへ戻る</a></p>
+<main class="page">
+    <section class="panel">
+        <div class="topbar">
+            <a href="/">トップへ戻る</a>
+            <span>帳票用固定文言</span>
+        </div>
+        <h1>マスタ変更</h1>
+        <p>Excelや帳票に使用する固定文言をここで管理します。保存後は再表示しても同じ内容が保持されます。</p>
+    </section>
+
+    <section class="panel">
+        <form action="/master/update" method="post" th:object="${master}">
+            <input type="hidden" th:field="*{id}">
+            <label for="masterText">固定文言</label>
+            <textarea id="masterText" th:field="*{masterText}" placeholder="ここにExcelに表示する固定文言を入力"></textarea>
+            <div class="actions">
+                <button type="submit">保存</button>
+            </div>
+        </form>
+    </section>
+</main>
 </body>
 </html>
