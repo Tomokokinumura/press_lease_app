@@ -172,6 +172,7 @@
                     <th>税込</th>
                     <th>クレジット</th>
                     <th>媒体名</th>
+                    <th>企画名</th>
                     <th>発売日</th>
                     <th>貸出日</th>
                     <th>返却日</th>
@@ -180,7 +181,7 @@
                 </thead>
                 <tbody id="resultTable">
                 <tr id="emptyRow">
-                    <td colspan="12" class="empty">伝票Noまたは品番を入力して検索してください。</td>
+                    <td colspan="13" class="empty">伝票Noまたは品番を入力して検索してください。</td>
                 </tr>
                 </tbody>
             </table>
@@ -377,7 +378,7 @@
     function renderRows(rows) {
         if (!rows.length) {
             resultMeta.textContent = "検索結果はまだありません。";
-            resultTable.innerHTML = '<tr id="emptyRow"><td colspan="12" class="empty">検索結果がありません。</td></tr>';
+            resultTable.innerHTML = '<tr id="emptyRow"><td colspan="13" class="empty">検索結果がありません。</td></tr>';
             return;
         }
 
@@ -398,6 +399,7 @@
                 <td><input type="text" data-field="taxPrice" value="${escapeHtml(formatNumber(row.taxPrice))}"></td>
                 <td><input type="text" data-field="credit" value="${escapeHtml(row.credit ?? "")}"></td>
                 <td><input type="text" data-field="mediaName" value="${escapeHtml(row.mediaName ?? "")}"></td>
+                <td><input type="text" data-field="projectName" value="${escapeHtml(row.projectName ?? "")}"></td>
                 <td><input type="date" data-field="releaseDate" value="${escapeHtml(row.releaseDate ?? "")}"></td>
                 <td><input type="date" data-field="loanDate" value="${escapeHtml(row.loanDate ?? "")}"></td>
                 <td><input type="date" data-field="returnDate" value="${escapeHtml(row.returnDate ?? "")}"></td>
@@ -417,6 +419,7 @@
             taxPrice: toNullableInt(getInputValue(row, "taxPrice")),
             credit: getInputValue(row, "credit"),
             mediaName: getInputValue(row, "mediaName"),
+            projectName: getInputValue(row, "projectName"),
             releaseDate: getInputValue(row, "releaseDate") || null,
             loanDate: getInputValue(row, "loanDate") || null,
             returnDate: getInputValue(row, "returnDate") || null,

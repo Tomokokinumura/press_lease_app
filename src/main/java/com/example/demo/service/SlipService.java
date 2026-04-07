@@ -5,6 +5,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Collections;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
@@ -86,14 +87,14 @@ public class SlipService {
         if (!hasText(slipNo)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Slip number is required.");
         }
-        return slipDetailMapper.findSlipRowsBySlipNo(slipNo.trim());
+        return enrichWithMediaRows(slipDetailMapper.findSlipRowsBySlipNo(slipNo.trim()));
     }
 
     public List<SlipDetailDto> findByCode(String code) {
         if (!hasText(code)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Code is required.");
         }
-        return slipDetailMapper.findSlipRowsByCode(code.trim());
+        return enrichWithMediaRows(slipDetailMapper.findSlipRowsByCode(code.trim()));
     }
 
     @Transactional
@@ -184,5 +185,35 @@ public class SlipService {
                 || hasText(media.getProjectName())
                 || hasText(media.getNote())
                 || media.getReleaseDate() != null);
+    }
+
+    private List<SlipDetailDto> enrichWithMediaRows(List<SlipDetailDto> rows) {
+        Map<Integer, List<SlipDetailDto>> rowsBySlipId = rows.stream()
+                .filter(row -> row.getSlipId() != null)
+                .collect(Collectors.groupingBy(
+                        SlipDetailDto::getSlipId,
+                        LinkedHashMap::new,
+                        Collectors.toList()));
+
+        for (Map.Entry<Integer, List<SlipDetailDto>> entry : rowsBySlipId.entrySet()) {
+            List<SlipMedia> mediaEntries = slipMediaMapper.findBySlipId(entry.getKey());
+            if (mediaEntries == null) {
+                mediaEntries = Collections.emptyList();
+            }
+
+            List<SlipDetailDto> detailRows = entry.getValue();
+            for (int i = 0; i < detailRows.size(); i++) {
+                SlipDetailDto row = detailRows.get(i);
+                if (i >= mediaEntries.size()) {
+                    continue;
+                }
+                SlipMedia media = mediaEntries.get(i);
+                row.setMediaName(media.getMediaName());
+                row.setProjectName(media.getProjectName());
+                row.setReleaseDate(media.getReleaseDate());
+            }
+        }
+
+        return rows;
     }
 }

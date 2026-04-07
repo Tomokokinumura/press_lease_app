@@ -33,14 +33,14 @@
 
     <select id="findBySlipNo" resultType="com.example.demo.entity.Slip">
         SELECT id,
-               slip_no,
-               staff_name,
-               customer_name,
-               contact_info,
-               email_address,
-               loan_date,
-               return_date,
-               created_at
+               slip_no AS slipNo,
+               staff_name AS staffName,
+               customer_name AS customerName,
+               contact_info AS contactInfo,
+               email_address AS emailAddress,
+               loan_date AS loanDate,
+               return_date AS returnDate,
+               created_at AS createdAt
         FROM slip
         WHERE slip_no = #{slipNo}
     </select>

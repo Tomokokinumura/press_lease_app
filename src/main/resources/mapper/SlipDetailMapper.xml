@@ -31,17 +31,17 @@
 
     <select id="findBySlipNo" resultType="com.example.demo.entity.SlipDetail">
         SELECT d.id,
-               d.slip_id,
+               d.slip_id AS slipId,
                d.code,
                d.name,
                d.price,
-               d.tax_price,
+               d.tax_price AS taxPrice,
                d.credit,
-               d.media_name,
-               d.release_date,
+               d.media_name AS mediaName,
+               d.release_date AS releaseDate,
                d.note,
                d.returned,
-               d.returned_date
+               d.returned_date AS returnedDate
         FROM slip_detail d
         JOIN slip s ON d.slip_id = s.id
         WHERE s.slip_no = #{slipNo}
@@ -56,19 +56,19 @@
     </update>
 
     <select id="findSlipRowsBySlipNo" resultType="com.example.demo.dto.SlipDetailDto">
-        SELECT s.id AS slip_id,
-               s.slip_no,
-               s.staff_name,
-               s.loan_date,
-               s.return_date,
+        SELECT s.id AS slipId,
+               s.slip_no AS slipNo,
+               s.staff_name AS staffName,
+               s.loan_date AS loanDate,
+               s.return_date AS returnDate,
                d.id,
                d.code,
                d.name,
                d.price,
-               d.tax_price,
+               d.tax_price AS taxPrice,
                d.credit,
-               d.media_name,
-               d.release_date,
+               d.media_name AS mediaName,
+               d.release_date AS releaseDate,
                d.note,
                d.returned
         FROM slip s
@@ -78,19 +78,19 @@
     </select>
 
     <select id="findSlipRowsByCode" resultType="com.example.demo.dto.SlipDetailDto">
-        SELECT s.id AS slip_id,
-               s.slip_no,
-               s.staff_name,
-               s.loan_date,
-               s.return_date,
+        SELECT s.id AS slipId,
+               s.slip_no AS slipNo,
+               s.staff_name AS staffName,
+               s.loan_date AS loanDate,
+               s.return_date AS returnDate,
                d.id,
                d.code,
                d.name,
                d.price,
-               d.tax_price,
+               d.tax_price AS taxPrice,
                d.credit,
-               d.media_name,
-               d.release_date,
+               d.media_name AS mediaName,
+               d.release_date AS releaseDate,
                d.note,
                d.returned
         FROM slip s

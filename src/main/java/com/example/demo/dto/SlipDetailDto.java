@@ -16,6 +16,7 @@ public class SlipDetailDto {
     private Integer taxPrice;
     private String credit;
     private String mediaName;
+    private String projectName;
     private LocalDate releaseDate;
     private String note;
     private Boolean returned;
@@ -114,6 +115,14 @@ public class SlipDetailDto {
 
     public void setMediaName(String mediaName) {
         this.mediaName = mediaName;
+    }
+
+    public String getProjectName() {
+        return projectName;
+    }
+
+    public void setProjectName(String projectName) {
+        this.projectName = projectName;
     }
 
     public LocalDate getReleaseDate() {
