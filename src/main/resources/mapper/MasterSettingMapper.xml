@@ -7,8 +7,8 @@
 
     <select id="find" resultType="com.example.demo.entity.MasterSetting">
         SELECT id,
-               master_text,
-               updated_at
+               master_text AS masterText,
+               updated_at AS updatedAt
         FROM master_setting
         ORDER BY id
         LIMIT 1

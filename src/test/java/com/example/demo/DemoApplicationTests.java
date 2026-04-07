@@ -130,14 +130,14 @@ class DemoApplicationTests {
     void masterPageLoads() throws Exception {
         MasterSetting setting = new MasterSetting();
         setting.setId(1);
-        setting.setMasterText("固定文言");
+        setting.setMasterText("保存済みの固定文言");
         given(masterSettingMapper.find()).willReturn(setting);
 
         mockMvc.perform(get("/master"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("master"))
                 .andExpect(model().attributeExists("master"))
-                .andExpect(content().string(Matchers.containsString("masterText")));
+                .andExpect(content().string(Matchers.containsString("保存済みの固定文言")));
     }
 
     @Test
@@ -316,3 +316,4 @@ class DemoApplicationTests {
         verify(slipExcelService).exportSlip(ArgumentMatchers.eq("202604001"), ArgumentMatchers.any());
     }
 }
+
