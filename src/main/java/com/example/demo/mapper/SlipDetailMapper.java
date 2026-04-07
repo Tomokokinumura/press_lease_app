@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.apache.ibatis.annotations.Param;
 
+import com.example.demo.dto.SlipDetailDto;
 import com.example.demo.entity.SlipDetail;
 
 public interface SlipDetailMapper {
@@ -13,4 +14,12 @@ public interface SlipDetailMapper {
     List<SlipDetail> findBySlipNo(@Param("slipNo") String slipNo);
 
     void updateReturn(SlipDetail slipDetail);
+
+    List<SlipDetailDto> findSlipRowsBySlipNo(@Param("slipNo") String slipNo);
+
+    List<SlipDetailDto> findSlipRowsByCode(@Param("code") String code);
+
+    void updateDetail(SlipDetailDto detail);
+
+    void deleteBySlipId(@Param("slipId") Integer slipId);
 }

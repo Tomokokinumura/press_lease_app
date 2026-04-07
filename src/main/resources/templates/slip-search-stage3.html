@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="ja" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>伝票検索</title>
+    <style>
+        :root {
+            --bg: #f6f1e8;
+            --panel: rgba(255, 253, 248, 0.94);
+            --line: #d9ccb7;
+            --text: #2d2418;
+            --muted: #756650;
+            --accent: #b85c38;
+            --accent-dark: #8f4528;
+            --surface: #fcf7f0;
+            --overlay: rgba(45, 36, 24, 0.45);
+            --danger: #b42318;
+            --success: #1d6f42;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: "Yu Gothic UI", "Hiragino Sans", sans-serif;
+            color: var(--text);
+            background:
+                radial-gradient(circle at top left, #fff8ea, transparent 32%),
+                linear-gradient(180deg, #f6efe2 0%, #efe4d2 100%);
+            padding: 24px;
+        }
+        .page {
+            max-width: 1320px;
+            margin: 0 auto;
+            display: grid;
+            gap: 20px;
+        }
+        .panel {
+            background: var(--panel);
+            border: 1px solid var(--line);
+            border-radius: 22px;
+            padding: 24px;
+            box-shadow: 0 18px 40px rgba(88, 62, 30, 0.08);
+        }
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .topbar a {
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 700;
+        }
+        h1 {
+            margin: 10px 0 0;
+            font-size: clamp(28px, 4vw, 40px);
+        }
+        .intro {
+            margin: 10px 0 0;
+            color: var(--muted);
+            line-height: 1.7;
+        }
+        .search-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(260px, 1fr));
+            gap: 14px;
+        }
+        .search-card {
+            display: grid;
+            gap: 10px;
+            padding: 18px;
+            border: 1px solid var(--line);
+            border-radius: 18px;
+            background: #fffdfa;
+        }
+        label {
+            font-size: 14px;
+            font-weight: 700;
+        }
+        input, button {
+            font: inherit;
+        }
+        input[type="text"], input[type="date"] {
+            width: 100%;
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            padding: 10px 12px;
+            background: #fff;
+            color: var(--text);
+        }
+        input[type="text"]:focus, input[type="date"]:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(184, 92, 56, 0.12);
+        }
+        button {
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            padding: 11px 18px;
+            cursor: pointer;
+            font-weight: 700;
+        }
+        .primary {
+            background: var(--accent);
+            border-color: var(--accent-dark);
+            color: #fff;
+        }
+        .secondary {
+            background: var(--surface);
+            color: var(--text);
+        }
+        .danger {
+            background: #fff1ee;
+            border-color: #e6b0a8;
+            color: var(--danger);
+        }
+        .action-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .action-buttons {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        #message {
+            min-height: 24px;
+            color: var(--muted);
+            font-size: 14px;
+        }
+        #message[data-state="error"] { color: var(--danger); }
+        #message[data-state="success"] { color: var(--success); }
+        .table-wrap {
+            overflow-x: auto;
+            border: 1px solid var(--line);
+            border-radius: 18px;
+            background: #fffdf8;
+        }
+        table {
+            width: 100%;
+            min-width: 1240px;
+            border-collapse: collapse;
+        }
+        thead th {
+            background: #efe1cf;
+            text-align: left;
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--line);
+            white-space: nowrap;
+        }
+        tbody td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #efe5d6;
+            vertical-align: middle;
+        }
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+        tbody input {
+            min-width: 100px;
+        }
+        .empty {
+            padding: 28px;
+            text-align: center;
+            color: var(--muted);
+        }
+        .status {
+            font-weight: 700;
+            color: var(--success);
+            white-space: nowrap;
+        }
+        .modal {
+            position: fixed;
+            inset: 0;
+            display: none;
+            place-items: center;
+            background: var(--overlay);
+            padding: 24px;
+        }
+        .modal.is-open {
+            display: grid;
+        }
+        .modal-card {
+            width: min(420px, 100%);
+            background: #fff;
+            border-radius: 18px;
+            padding: 24px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.18);
+        }
+        .modal-card h2 {
+            margin: 0 0 12px;
+        }
+        .modal-card p {
+            margin: 0 0 18px;
+            line-height: 1.7;
+        }
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+        @media (max-width: 900px) {
+            .search-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+<main class="page">
+    <section class="panel">
+        <div class="topbar">
+            <a href="/">トップへ戻る</a>
+            <span id="activeSearchLabel">検索対象: 未選択</span>
+        </div>
+        <h1>伝票検索</h1>
+        <p class="intro">伝票No または品番で保存済みデータを検索し、そのまま編集・更新・削除できます。返却済みの明細は状態欄に表示します。</p>
+    </section>
+
+    <section class="panel">
+        <div class="search-grid">
+            <div class="search-card">
+                <label for="slipNoInput">伝票No検索</label>
+                <input type="text" id="slipNoInput" placeholder="例: 202604001" autocomplete="off">
+                <button type="button" id="searchSlipButton" class="secondary">伝票Noで検索</button>
+            </div>
+            <div class="search-card">
+                <label for="codeInput">品番検索</label>
+                <input type="text" id="codeInput" placeholder="例: 12345678" autocomplete="off">
+                <button type="button" id="searchCodeButton" class="secondary">品番で検索</button>
+            </div>
+        </div>
+        <div id="message" aria-live="polite"></div>
+    </section>
+
+    <section class="panel">
+        <div class="action-row">
+            <div id="resultMeta">検索結果はまだありません。</div>
+            <div class="action-buttons">
+                <button type="button" id="updateButton" class="primary">更新</button>
+                <button type="button" id="deleteButton" class="danger">削除</button>
+            </div>
+        </div>
+        <div class="table-wrap" style="margin-top: 16px;">
+            <table>
+                <thead>
+                <tr>
+                    <th>状態</th>
+                    <th>伝票No</th>
+                    <th>品番</th>
+                    <th>タイトル</th>
+                    <th>価格</th>
+                    <th>税込</th>
+                    <th>クレジット</th>
+                    <th>媒体</th>
+                    <th>発売日</th>
+                    <th>貸出日</th>
+                    <th>返却日</th>
+                    <th>備考</th>
+                </tr>
+                </thead>
+                <tbody id="resultTable">
+                <tr id="emptyRow">
+                    <td colspan="12" class="empty">伝票Noまたは品番を入力して検索してください。</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</main>
+
+<div class="modal" id="deleteModal" aria-hidden="true">
+    <div class="modal-card">
+        <h2>伝票削除</h2>
+        <p id="deleteModalMessage">本当に削除しますか？</p>
+        <div class="modal-actions">
+            <button type="button" id="cancelDeleteButton" class="secondary">キャンセル</button>
+            <button type="button" id="confirmDeleteButton" class="danger">削除する</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const slipNoInput = document.getElementById("slipNoInput");
+    const codeInput = document.getElementById("codeInput");
+    const searchSlipButton = document.getElementById("searchSlipButton");
+    const searchCodeButton = document.getElementById("searchCodeButton");
+    const updateButton = document.getElementById("updateButton");
+    const deleteButton = document.getElementById("deleteButton");
+    const resultTable = document.getElementById("resultTable");
+    const resultMeta = document.getElementById("resultMeta");
+    const message = document.getElementById("message");
+    const activeSearchLabel = document.getElementById("activeSearchLabel");
+    const deleteModal = document.getElementById("deleteModal");
+    const deleteModalMessage = document.getElementById("deleteModalMessage");
+    const cancelDeleteButton = document.getElementById("cancelDeleteButton");
+    const confirmDeleteButton = document.getElementById("confirmDeleteButton");
+
+    let currentMode = "";
+
+    searchSlipButton.addEventListener("click", () => runSearch("slip"));
+    searchCodeButton.addEventListener("click", () => runSearch("code"));
+    updateButton.addEventListener("click", updateSlip);
+    deleteButton.addEventListener("click", openDeleteModal);
+    cancelDeleteButton.addEventListener("click", closeDeleteModal);
+    confirmDeleteButton.addEventListener("click", deleteSlip);
+
+    slipNoInput.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") {
+            event.preventDefault();
+            runSearch("slip");
+        }
+    });
+
+    codeInput.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") {
+            event.preventDefault();
+            runSearch("code");
+        }
+    });
+
+    deleteModal.addEventListener("click", (event) => {
+        if (event.target === deleteModal) {
+            closeDeleteModal();
+        }
+    });
+
+    async function runSearch(mode) {
+        const isSlipMode = mode === "slip";
+        const value = (isSlipMode ? slipNoInput.value : codeInput.value).trim();
+        if (!value) {
+            setMessage(isSlipMode ? "伝票Noを入力してください。" : "品番を入力してください。", "error");
+            return;
+        }
+
+        currentMode = mode;
+        setMessage("検索中です...", "");
+        setSearchButtonsDisabled(true);
+
+        try {
+            const url = isSlipMode
+                ? `/api/slip?slipNo=${encodeURIComponent(value)}`
+                : `/api/slip/code?code=${encodeURIComponent(value)}`;
+            const response = await fetch(url);
+            const data = await response.json().catch(() => []);
+            if (!response.ok) {
+                throw new Error("検索に失敗しました。");
+            }
+
+            renderRows(Array.isArray(data) ? data : []);
+            activeSearchLabel.textContent = isSlipMode
+                ? `検索対象: 伝票No ${value}`
+                : `検索対象: 品番 ${value}`;
+
+            if (data.length === 0) {
+                setMessage("該当データが見つかりませんでした。", "error");
+            } else {
+                setMessage(`${data.length}件の明細を表示しました。`, "success");
+            }
+        } catch (error) {
+            renderRows([]);
+            setMessage(error.message || "検索に失敗しました。", "error");
+        } finally {
+            setSearchButtonsDisabled(false);
+        }
+    }
+
+    async function updateSlip() {
+        const rows = collectRows();
+        if (!rows.length) {
+            setMessage("更新対象のデータがありません。", "error");
+            return;
+        }
+
+        updateButton.disabled = true;
+        setMessage("更新中です...", "");
+
+        try {
+            const response = await fetch("/api/slip/update", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(rows)
+            });
+
+            if (!response.ok) {
+                throw new Error("更新に失敗しました。");
+            }
+
+            setMessage("更新しました。", "success");
+        } catch (error) {
+            setMessage(error.message || "更新に失敗しました。", "error");
+        } finally {
+            updateButton.disabled = false;
+        }
+    }
+
+    function openDeleteModal() {
+        const slipNo = resolveDeletableSlipNo();
+        if (!slipNo) {
+            setMessage("削除は伝票No検索後、または単一伝票の結果に対して実行してください。", "error");
+            return;
+        }
+
+        deleteModalMessage.textContent = `伝票No.${slipNo} を本当に削除しますか？`;
+        deleteModal.classList.add("is-open");
+        deleteModal.setAttribute("aria-hidden", "false");
+    }
+
+    function closeDeleteModal() {
+        deleteModal.classList.remove("is-open");
+        deleteModal.setAttribute("aria-hidden", "true");
+    }
+
+    async function deleteSlip() {
+        const slipNo = resolveDeletableSlipNo();
+        if (!slipNo) {
+            closeDeleteModal();
+            setMessage("削除対象の伝票を特定できませんでした。", "error");
+            return;
+        }
+
+        confirmDeleteButton.disabled = true;
+        setMessage("削除中です...", "");
+
+        try {
+            const response = await fetch(`/api/slip/delete?slipNo=${encodeURIComponent(slipNo)}`, {
+                method: "POST"
+            });
+
+            if (!response.ok) {
+                throw new Error("削除に失敗しました。");
+            }
+
+            renderRows([]);
+            slipNoInput.value = "";
+            codeInput.value = "";
+            activeSearchLabel.textContent = "検索対象: 未選択";
+            setMessage(`伝票No.${slipNo} を削除しました。`, "success");
+            closeDeleteModal();
+        } catch (error) {
+            setMessage(error.message || "削除に失敗しました。", "error");
+        } finally {
+            confirmDeleteButton.disabled = false;
+        }
+    }
+
+    function renderRows(rows) {
+        if (!rows.length) {
+            resultMeta.textContent = "検索結果はまだありません。";
+            resultTable.innerHTML = '<tr id="emptyRow"><td colspan="12" class="empty">該当データがありません。</td></tr>';
+            return;
+        }
+
+        const slipNos = [...new Set(rows.map((row) => row.slipNo).filter(Boolean))];
+        resultMeta.textContent = slipNos.length === 1
+            ? `伝票No.${slipNos[0]} の明細 ${rows.length}件`
+            : `${slipNos.length}件の伝票から ${rows.length}件の明細を表示中`;
+
+        resultTable.innerHTML = rows.map((row) => `
+            <tr data-detail-id="${escapeHtml(String(row.id ?? ""))}"
+                data-slip-id="${escapeHtml(String(row.slipId ?? ""))}"
+                data-slip-no="${escapeHtml(row.slipNo ?? "")}">
+                <td><span class="status">${row.returned ? "返却済み" : ""}</span></td>
+                <td>${escapeHtml(row.slipNo ?? "")}</td>
+                <td><input type="text" data-field="code" value="${escapeHtml(row.code ?? "")}"></td>
+                <td><input type="text" data-field="name" value="${escapeHtml(row.name ?? "")}"></td>
+                <td><input type="text" data-field="price" value="${escapeHtml(formatNumber(row.price))}"></td>
+                <td><input type="text" data-field="taxPrice" value="${escapeHtml(formatNumber(row.taxPrice))}"></td>
+                <td><input type="text" data-field="credit" value="${escapeHtml(row.credit ?? "")}"></td>
+                <td><input type="text" data-field="mediaName" value="${escapeHtml(row.mediaName ?? "")}"></td>
+                <td><input type="date" data-field="releaseDate" value="${escapeHtml(row.releaseDate ?? "")}"></td>
+                <td><input type="date" data-field="loanDate" value="${escapeHtml(row.loanDate ?? "")}"></td>
+                <td><input type="date" data-field="returnDate" value="${escapeHtml(row.returnDate ?? "")}"></td>
+                <td><input type="text" data-field="note" value="${escapeHtml(row.note ?? "")}"></td>
+            </tr>
+        `).join("");
+    }
+
+    function collectRows() {
+        return Array.from(document.querySelectorAll("#resultTable tr[data-detail-id]")).map((row) => ({
+            id: toNullableInt(row.dataset.detailId),
+            slipId: toNullableInt(row.dataset.slipId),
+            slipNo: row.dataset.slipNo || "",
+            code: getInputValue(row, "code"),
+            name: getInputValue(row, "name"),
+            price: toNullableInt(getInputValue(row, "price")),
+            taxPrice: toNullableInt(getInputValue(row, "taxPrice")),
+            credit: getInputValue(row, "credit"),
+            mediaName: getInputValue(row, "mediaName"),
+            releaseDate: getInputValue(row, "releaseDate") || null,
+            loanDate: getInputValue(row, "loanDate") || null,
+            returnDate: getInputValue(row, "returnDate") || null,
+            note: getInputValue(row, "note"),
+            returned: row.querySelector(".status").textContent === "返却済み"
+        }));
+    }
+
+    function resolveDeletableSlipNo() {
+        const rows = Array.from(document.querySelectorAll("#resultTable tr[data-slip-no]"));
+        const slipNos = [...new Set(rows.map((row) => row.dataset.slipNo).filter(Boolean))];
+        return slipNos.length === 1 ? slipNos[0] : "";
+    }
+
+    function getInputValue(row, field) {
+        const input = row.querySelector(`[data-field='${field}']`);
+        return input ? input.value.trim() : "";
+    }
+
+    function setSearchButtonsDisabled(disabled) {
+        searchSlipButton.disabled = disabled;
+        searchCodeButton.disabled = disabled;
+    }
+
+    function toNullableInt(value) {
+        const normalized = String(value ?? "").replace(/,/g, "").trim();
+        if (!normalized) {
+            return null;
+        }
+        const parsed = Number.parseInt(normalized, 10);
+        return Number.isFinite(parsed) ? parsed : null;
+    }
+
+    function formatNumber(value) {
+        if (value === null || value === undefined || value === "") {
+            return "";
+        }
+        const parsed = Number(value);
+        return Number.isFinite(parsed) ? parsed.toLocaleString("ja-JP") : String(value);
+    }
+
+    function setMessage(text, state) {
+        message.textContent = text;
+        if (state) {
+            message.dataset.state = state;
+        } else {
+            delete message.dataset.state;
+        }
+    }
+
+    function escapeHtml(value) {
+        return String(value)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#39;");
+    }
+</script>
+</body>
+</html>

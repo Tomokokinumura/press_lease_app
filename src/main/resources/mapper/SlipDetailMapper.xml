@@ -55,4 +55,66 @@
         WHERE id = #{id}
     </update>
 
+    <select id="findSlipRowsBySlipNo" resultType="com.example.demo.dto.SlipDetailDto">
+        SELECT s.id AS slip_id,
+               s.slip_no,
+               s.staff_name,
+               s.loan_date,
+               s.return_date,
+               d.id,
+               d.code,
+               d.name,
+               d.price,
+               d.tax_price,
+               d.credit,
+               d.media_name,
+               d.release_date,
+               d.note,
+               d.returned
+        FROM slip s
+        JOIN slip_detail d ON s.id = d.slip_id
+        WHERE s.slip_no = #{slipNo}
+        ORDER BY d.id
+    </select>
+
+    <select id="findSlipRowsByCode" resultType="com.example.demo.dto.SlipDetailDto">
+        SELECT s.id AS slip_id,
+               s.slip_no,
+               s.staff_name,
+               s.loan_date,
+               s.return_date,
+               d.id,
+               d.code,
+               d.name,
+               d.price,
+               d.tax_price,
+               d.credit,
+               d.media_name,
+               d.release_date,
+               d.note,
+               d.returned
+        FROM slip s
+        JOIN slip_detail d ON s.id = d.slip_id
+        WHERE d.code = #{code}
+        ORDER BY s.slip_no, d.id
+    </select>
+
+    <update id="updateDetail" parameterType="com.example.demo.dto.SlipDetailDto">
+        UPDATE slip_detail
+        SET code = #{code},
+            name = #{name},
+            price = #{price},
+            tax_price = #{taxPrice},
+            credit = #{credit},
+            media_name = #{mediaName},
+            release_date = #{releaseDate},
+            note = #{note}
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteBySlipId">
+        DELETE FROM slip_detail
+        WHERE slip_id = #{slipId}
+    </delete>
+
 </mapper>

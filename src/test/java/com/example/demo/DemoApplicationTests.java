@@ -27,8 +27,10 @@ import com.example.demo.controller.ExcelExportController;
 import com.example.demo.controller.HelloController;
 import com.example.demo.controller.ReturnApiController;
 import com.example.demo.controller.SheetController;
+import com.example.demo.controller.SlipSearchApiController;
 import com.example.demo.controller.TopController;
 import com.example.demo.dto.SheetSearchResponse;
+import com.example.demo.dto.SlipDetailDto;
 import com.example.demo.entity.SlipDetail;
 import com.example.demo.mapper.SlipDetailMapper;
 import com.example.demo.mapper.SlipMapper;
@@ -42,7 +44,8 @@ import com.example.demo.service.SlipService;
         TopController.class,
         ExcelExportController.class,
         SheetController.class,
-        ReturnApiController.class
+        ReturnApiController.class,
+        SlipSearchApiController.class
 })
 class DemoApplicationTests {
 
@@ -97,18 +100,26 @@ class DemoApplicationTests {
         mockMvc.perform(get("/return"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("return-stage2"))
-                .andExpect(content().string(Matchers.containsString("伝票No")));
+                .andExpect(content().string(Matchers.containsString("slipNo")));
+    }
+
+    @Test
+    void slipSearchPageLoads() throws Exception {
+        mockMvc.perform(get("/slip-search"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("slip-search-stage3"))
+                .andExpect(content().string(Matchers.containsString("searchSlipButton")));
     }
 
     @Test
     void searchReturnsMatchingSheetRow() throws Exception {
         given(googleSheetsService.findByCode("A001"))
-                .willReturn(Optional.of(new SheetSearchResponse("A001", "商品A", "1000")));
+                .willReturn(Optional.of(new SheetSearchResponse("A001", "Product A", "1000")));
 
         mockMvc.perform(get("/api/search").param("code", "A001"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value("A001"))
-                .andExpect(jsonPath("$.name").value("商品A"))
+                .andExpect(jsonPath("$.name").value("Product A"))
                 .andExpect(jsonPath("$.price").value("1000"));
     }
 
@@ -117,10 +128,10 @@ class DemoApplicationTests {
         SlipDetail detail = new SlipDetail();
         detail.setId(1);
         detail.setCode("12345678");
-        detail.setName("商品A");
+        detail.setName("Product A");
         detail.setPrice(1000);
         detail.setTaxPrice(1100);
-        detail.setCredit("山田");
+        detail.setCredit("Yamada");
         detail.setReturned(Boolean.TRUE);
 
         given(slipDetailMapper.findBySlipNo("202604001")).willReturn(List.of(detail));
@@ -155,5 +166,78 @@ class DemoApplicationTests {
         unreturnedDetail.setReturned(Boolean.FALSE);
         unreturnedDetail.setReturnedDate(null);
         verify(slipDetailMapper).updateReturn(ArgumentMatchers.refEq(unreturnedDetail));
+    }
+
+    @Test
+    void slipApiReturnsRowsBySlipNo() throws Exception {
+        SlipDetailDto dto = new SlipDetailDto();
+        dto.setSlipId(10);
+        dto.setSlipNo("202604001");
+        dto.setId(1);
+        dto.setCode("12345678");
+        dto.setName("Product A");
+        dto.setReturned(Boolean.TRUE);
+
+        given(slipService.findBySlipNo("202604001")).willReturn(List.of(dto));
+
+        mockMvc.perform(get("/api/slip").param("slipNo", "202604001"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].slipNo").value("202604001"))
+                .andExpect(jsonPath("$[0].code").value("12345678"))
+                .andExpect(jsonPath("$[0].returned").value(true));
+    }
+
+    @Test
+    void slipCodeApiReturnsRowsByCode() throws Exception {
+        SlipDetailDto dto = new SlipDetailDto();
+        dto.setSlipId(10);
+        dto.setSlipNo("202604001");
+        dto.setId(1);
+        dto.setCode("12345678");
+        dto.setName("Product A");
+
+        given(slipService.findByCode("12345678")).willReturn(List.of(dto));
+
+        mockMvc.perform(get("/api/slip/code").param("code", "12345678"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].slipNo").value("202604001"))
+                .andExpect(jsonPath("$[0].code").value("12345678"));
+    }
+
+    @Test
+    void slipUpdateApiDelegatesToService() throws Exception {
+        mockMvc.perform(post("/api/slip/update")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                [
+                                  {
+                                    "id": 1,
+                                    "slipId": 10,
+                                    "slipNo": "202604001",
+                                    "code": "12345678",
+                                    "name": "Product A",
+                                    "price": 1000,
+                                    "taxPrice": 1100,
+                                    "credit": "Yamada",
+                                    "mediaName": "Magazine",
+                                    "releaseDate": "2026-04-01",
+                                    "loanDate": "2026-04-07",
+                                    "returnDate": "2026-04-20",
+                                    "note": "memo",
+                                    "returned": true
+                                  }
+                                ]
+                                """))
+                .andExpect(status().isOk());
+
+        verify(slipService).updateDetails(ArgumentMatchers.anyList());
+    }
+
+    @Test
+    void slipDeleteApiDelegatesToService() throws Exception {
+        mockMvc.perform(post("/api/slip/delete").param("slipNo", "202604001"))
+                .andExpect(status().isOk());
+
+        verify(slipService).deleteBySlipNo("202604001");
     }
 }

@@ -19,4 +19,9 @@
         )
     </insert>
 
+    <delete id="deleteBySlipId">
+        DELETE FROM slip_media
+        WHERE slip_id = #{slipId}
+    </delete>
+
 </mapper>
