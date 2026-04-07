@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ja" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
@@ -23,12 +23,7 @@
                 linear-gradient(180deg, #f6efe2 0%, #efe4d2 100%);
             padding: 24px;
         }
-        .page {
-            max-width: 900px;
-            margin: 0 auto;
-            display: grid;
-            gap: 20px;
-        }
+        .page { max-width: 900px; margin: 0 auto; display: grid; gap: 20px; }
         .panel {
             background: rgba(255, 253, 248, 0.94);
             border: 1px solid var(--line);
@@ -36,31 +31,11 @@
             padding: 24px;
             box-shadow: 0 18px 40px rgba(88, 62, 30, 0.08);
         }
-        .topbar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 12px;
-            flex-wrap: wrap;
-        }
-        .topbar a {
-            color: var(--accent);
-            text-decoration: none;
-            font-weight: 700;
-        }
-        h1 {
-            margin: 10px 0 0;
-            font-size: clamp(28px, 4vw, 40px);
-        }
-        p {
-            color: var(--muted);
-            line-height: 1.7;
-        }
-        label {
-            display: block;
-            margin-bottom: 10px;
-            font-weight: 700;
-        }
+        .topbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+        .topbar a { color: var(--accent); text-decoration: none; font-weight: 700; }
+        h1 { margin: 10px 0 0; font-size: clamp(28px, 4vw, 40px); }
+        p { color: var(--muted); line-height: 1.7; }
+        label { display: block; margin-bottom: 10px; font-weight: 700; }
         textarea {
             width: 100%;
             min-height: 280px;
@@ -77,11 +52,7 @@
             border-color: var(--accent);
             box-shadow: 0 0 0 3px rgba(184, 92, 56, 0.12);
         }
-        .actions {
-            margin-top: 16px;
-            display: flex;
-            justify-content: flex-end;
-        }
+        .actions { margin-top: 16px; display: flex; justify-content: flex-end; }
         button {
             border: 1px solid var(--accent-dark);
             border-radius: 14px;
@@ -99,17 +70,17 @@
     <section class="panel">
         <div class="topbar">
             <a href="/">トップへ戻る</a>
-            <span>帳票用固定文言</span>
+            <span>固定文言管理</span>
         </div>
         <h1>マスタ変更</h1>
-        <p>Excelや帳票に使用する固定文言をここで管理します。保存後は再表示しても同じ内容が保持されます。</p>
+        <p>Excelや帳票に使用する固定文言をここで管理します。保存すると次回表示時にも更新内容が反映されます。</p>
     </section>
 
     <section class="panel">
         <form action="/master/update" method="post" th:object="${master}">
             <input type="hidden" th:field="*{id}">
             <label for="masterText">固定文言</label>
-            <textarea id="masterText" th:field="*{masterText}" placeholder="ここにExcelに表示する固定文言を入力"></textarea>
+            <textarea id="masterText" th:field="*{masterText}" placeholder="ここにExcelに表示する固定文言を入力してください"></textarea>
             <div class="actions">
                 <button type="submit">保存</button>
             </div>

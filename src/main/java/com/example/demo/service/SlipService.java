@@ -181,6 +181,7 @@ public class SlipService {
 
     private boolean hasMeaningfulMedia(SlipMedia media) {
         return media != null && (hasText(media.getMediaName())
+                || hasText(media.getProjectName())
                 || hasText(media.getNote())
                 || media.getReleaseDate() != null);
     }

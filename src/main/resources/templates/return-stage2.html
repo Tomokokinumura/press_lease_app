@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ja" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
@@ -6,7 +6,6 @@
     <title>返却登録</title>
     <style>
         :root {
-            --bg: #f6f1e8;
             --panel: rgba(255, 253, 248, 0.94);
             --line: #d9ccb7;
             --text: #2d2418;
@@ -28,12 +27,7 @@
                 linear-gradient(180deg, #f6efe2 0%, #efe4d2 100%);
             padding: 24px;
         }
-        .page {
-            max-width: 1180px;
-            margin: 0 auto;
-            display: grid;
-            gap: 20px;
-        }
+        .page { max-width: 1180px; margin: 0 auto; display: grid; gap: 20px; }
         .panel {
             background: var(--panel);
             border: 1px solid var(--line);
@@ -41,45 +35,14 @@
             padding: 24px;
             box-shadow: 0 18px 40px rgba(88, 62, 30, 0.08);
         }
-        .topbar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 12px;
-            flex-wrap: wrap;
-        }
-        .topbar a {
-            color: var(--accent);
-            text-decoration: none;
-            font-weight: 700;
-        }
-        h1 {
-            margin: 10px 0 0;
-            font-size: clamp(28px, 4vw, 40px);
-        }
-        .intro {
-            margin: 10px 0 0;
-            color: var(--muted);
-            line-height: 1.7;
-        }
-        .search-row {
-            display: flex;
-            gap: 12px;
-            align-items: end;
-            flex-wrap: wrap;
-        }
-        .field {
-            display: grid;
-            gap: 8px;
-            min-width: min(320px, 100%);
-        }
-        label {
-            font-size: 14px;
-            font-weight: 700;
-        }
-        input, button {
-            font: inherit;
-        }
+        .topbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+        .topbar a { color: var(--accent); text-decoration: none; font-weight: 700; }
+        h1 { margin: 10px 0 0; font-size: clamp(28px, 4vw, 40px); }
+        .intro { margin: 10px 0 0; color: var(--muted); line-height: 1.7; }
+        .search-row { display: flex; gap: 12px; align-items: end; flex-wrap: wrap; }
+        .field { display: grid; gap: 8px; min-width: min(320px, 100%); }
+        label { font-size: 14px; font-weight: 700; }
+        input, button { font: inherit; }
         input[type="text"] {
             border: 1px solid var(--line);
             border-radius: 14px;
@@ -99,26 +62,10 @@
             cursor: pointer;
             font-weight: 700;
         }
-        .primary {
-            background: var(--accent);
-            border-color: var(--accent-dark);
-            color: #fff;
-        }
-        .secondary {
-            background: var(--surface);
-            color: var(--text);
-        }
-        .actions {
-            display: flex;
-            justify-content: flex-end;
-            gap: 12px;
-            flex-wrap: wrap;
-        }
-        #message {
-            min-height: 24px;
-            color: var(--muted);
-            font-size: 14px;
-        }
+        .primary { background: var(--accent); border-color: var(--accent-dark); color: #fff; }
+        .secondary { background: var(--surface); color: var(--text); }
+        .actions { display: flex; justify-content: flex-end; gap: 12px; flex-wrap: wrap; }
+        #message { min-height: 24px; color: var(--muted); font-size: 14px; }
         #message[data-state="error"] { color: var(--error); }
         #message[data-state="success"] { color: var(--success); }
         .table-wrap {
@@ -127,11 +74,7 @@
             border-radius: 18px;
             background: #fffdf8;
         }
-        table {
-            width: 100%;
-            min-width: 760px;
-            border-collapse: collapse;
-        }
+        table { width: 100%; min-width: 760px; border-collapse: collapse; }
         thead th {
             background: #efe1cf;
             text-align: left;
@@ -143,21 +86,10 @@
             border-bottom: 1px solid #efe5d6;
             vertical-align: middle;
         }
-        tbody tr:last-child td {
-            border-bottom: none;
-        }
-        .empty {
-            padding: 28px;
-            text-align: center;
-            color: var(--muted);
-        }
-        .checkbox-cell {
-            width: 90px;
-        }
-        .checkbox-cell input {
-            width: 18px;
-            height: 18px;
-        }
+        tbody tr:last-child td { border-bottom: none; }
+        .empty { padding: 28px; text-align: center; color: var(--muted); }
+        .checkbox-cell { width: 90px; }
+        .checkbox-cell input { width: 18px; height: 18px; }
         .status-badge {
             display: inline-flex;
             align-items: center;
@@ -169,20 +101,11 @@
             background: #f5eadf;
             color: var(--muted);
         }
-        .status-badge.is-returned {
-            background: #e5f3ea;
-            color: var(--success);
-        }
+        .status-badge.is-returned { background: #e5f3ea; color: var(--success); }
         @media (max-width: 700px) {
-            .search-row {
-                align-items: stretch;
-            }
-            .field {
-                min-width: 100%;
-            }
-            .search-row button {
-                width: 100%;
-            }
+            .search-row { align-items: stretch; }
+            .field { min-width: 100%; }
+            .search-row button { width: 100%; }
         }
     </style>
 </head>
@@ -213,7 +136,7 @@
             <table>
                 <thead>
                 <tr>
-                    <th>返却済み</th>
+                    <th>返却</th>
                     <th>品番</th>
                     <th>タイトル</th>
                     <th>価格</th>
@@ -325,7 +248,7 @@
 
     function renderRows(details) {
         if (!details.length) {
-            resultTable.innerHTML = '<tr id="emptyRow"><td colspan="7" class="empty">該当データがありません。</td></tr>';
+            resultTable.innerHTML = '<tr id="emptyRow"><td colspan="7" class="empty">検索結果がありません。</td></tr>';
             return;
         }
 

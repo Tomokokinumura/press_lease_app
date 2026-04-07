@@ -9,11 +9,13 @@
         INSERT INTO slip_media (
             slip_id,
             media_name,
+            project_name,
             release_date,
             note
         ) VALUES (
             #{slipId},
             #{mediaName},
+            #{projectName},
             #{releaseDate},
             #{note}
         )

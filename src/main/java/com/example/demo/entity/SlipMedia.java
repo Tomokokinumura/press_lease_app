@@ -7,6 +7,7 @@ public class SlipMedia {
     private Integer id;
     private Integer slipId;
     private String mediaName;
+    private String projectName;
     private LocalDate releaseDate;
     private String note;
 
@@ -32,6 +33,14 @@ public class SlipMedia {
 
     public void setMediaName(String mediaName) {
         this.mediaName = mediaName;
+    }
+
+    public String getProjectName() {
+        return projectName;
+    }
+
+    public void setProjectName(String projectName) {
+        this.projectName = projectName;
     }
 
     public LocalDate getReleaseDate() {

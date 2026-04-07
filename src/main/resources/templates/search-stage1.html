@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ja" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
@@ -27,12 +27,7 @@
                 linear-gradient(180deg, #f6efe2 0%, #efe4d2 100%);
             padding: 24px;
         }
-        .page {
-            max-width: 1240px;
-            margin: 0 auto;
-            display: grid;
-            gap: 20px;
-        }
+        .page { max-width: 1240px; margin: 0 auto; display: grid; gap: 20px; }
         .panel {
             background: rgba(255, 253, 248, 0.92);
             border: 1px solid var(--line);
@@ -40,43 +35,14 @@
             padding: 24px;
             box-shadow: 0 18px 40px rgba(88, 62, 30, 0.08);
         }
-        .topbar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 12px;
-            flex-wrap: wrap;
-        }
-        .topbar a {
-            color: var(--accent);
-            text-decoration: none;
-            font-weight: 700;
-        }
-        h1 {
-            margin: 10px 0 0;
-            font-size: clamp(28px, 4vw, 40px);
-        }
-        .intro {
-            margin: 10px 0 0;
-            color: var(--muted);
-            line-height: 1.7;
-        }
-        .header-grid {
-            display: grid;
-            grid-template-columns: repeat(3, minmax(180px, 1fr));
-            gap: 14px;
-        }
-        .field {
-            display: grid;
-            gap: 8px;
-        }
-        label {
-            font-size: 14px;
-            font-weight: 700;
-        }
-        input, button {
-            font: inherit;
-        }
+        .topbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+        .topbar a { color: var(--accent); text-decoration: none; font-weight: 700; }
+        h1 { margin: 10px 0 0; font-size: clamp(28px, 4vw, 40px); }
+        .intro { margin: 10px 0 0; color: var(--muted); line-height: 1.7; }
+        .header-grid { display: grid; grid-template-columns: repeat(3, minmax(180px, 1fr)); gap: 14px; }
+        .field { display: grid; gap: 8px; }
+        label { font-size: 14px; font-weight: 700; }
+        input, button { font: inherit; }
         .field input,
         .search-row input,
         .media-row input,
@@ -96,25 +62,10 @@
             border-color: var(--accent);
             box-shadow: 0 0 0 3px rgba(184, 92, 56, 0.12);
         }
-        .search-block, .media-block {
-            display: grid;
-            gap: 12px;
-        }
-        .search-row {
-            display: flex;
-            gap: 12px;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-        .search-row input {
-            width: min(360px, 100%);
-            font-size: 18px;
-            letter-spacing: 0.08em;
-        }
-        .hint, #message, .meta-note {
-            color: var(--muted);
-            font-size: 14px;
-        }
+        .search-block, .media-block { display: grid; gap: 12px; }
+        .search-row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+        .search-row input { width: min(360px, 100%); font-size: 18px; letter-spacing: 0.08em; }
+        .hint, #message, .meta-note { color: var(--muted); font-size: 14px; }
         #message[data-state="error"] { color: #b42318; }
         #message[data-state="success"] { color: #1d6f42; }
         .media-header, .action-buttons {
@@ -124,29 +75,14 @@
             gap: 12px;
             flex-wrap: wrap;
         }
-        .action-buttons {
-            justify-content: flex-end;
-        }
-        .action-buttons button,
-        .media-header button {
-            cursor: pointer;
-            font-weight: 700;
-        }
-        .primary {
-            background: var(--accent) !important;
-            border-color: var(--accent-dark) !important;
-            color: #fff !important;
-        }
-        .secondary {
-            background: var(--surface) !important;
-        }
-        .media-rows {
-            display: grid;
-            gap: 10px;
-        }
+        .action-buttons { justify-content: flex-end; }
+        .action-buttons button, .media-header button { cursor: pointer; font-weight: 700; }
+        .primary { background: var(--accent) !important; border-color: var(--accent-dark) !important; color: #fff !important; }
+        .secondary { background: var(--surface) !important; }
+        .media-rows { display: grid; gap: 10px; }
         .media-row {
             display: grid;
-            grid-template-columns: 1.2fr 0.9fr 1.3fr auto;
+            grid-template-columns: 1.2fr 1.2fr 0.95fr 0.7fr auto;
             gap: 10px;
             align-items: end;
         }
@@ -165,26 +101,15 @@
             border-radius: 18px;
             background: var(--panel);
         }
-        table {
-            width: 100%;
-            min-width: 820px;
-            border-collapse: collapse;
-        }
+        table { width: 100%; min-width: 920px; border-collapse: collapse; }
         thead th {
             background: #efe1cf;
             text-align: left;
             padding: 14px 16px;
             border-bottom: 1px solid var(--line);
         }
-        tbody td {
-            padding: 10px 12px;
-            border-bottom: 1px solid #efe5d6;
-        }
-        .empty {
-            padding: 28px;
-            text-align: center;
-            color: var(--muted);
-        }
+        tbody td { padding: 10px 12px; border-bottom: 1px solid #efe5d6; }
+        .empty { padding: 28px; text-align: center; color: var(--muted); }
         .modal {
             position: fixed;
             inset: 0;
@@ -193,9 +118,7 @@
             background: var(--overlay);
             padding: 24px;
         }
-        .modal.is-open {
-            display: grid;
-        }
+        .modal.is-open { display: grid; }
         .modal-card {
             width: min(420px, 100%);
             background: #fff;
@@ -203,20 +126,11 @@
             padding: 24px;
             box-shadow: 0 20px 50px rgba(0, 0, 0, 0.18);
         }
-        .modal-card h2 {
-            margin: 0 0 12px;
-        }
-        .modal-card p {
-            margin: 0 0 18px;
-            line-height: 1.7;
-        }
+        .modal-card h2 { margin: 0 0 12px; }
+        .modal-card p { margin: 0 0 18px; line-height: 1.7; }
         @media (max-width: 900px) {
-            .header-grid {
-                grid-template-columns: 1fr;
-            }
-            .media-row {
-                grid-template-columns: 1fr;
-            }
+            .header-grid { grid-template-columns: 1fr; }
+            .media-row { grid-template-columns: 1fr; }
         }
     </style>
 </head>
@@ -225,10 +139,10 @@
     <section class="panel">
         <div class="topbar">
             <a href="/">トップへ戻る</a>
-            <span class="meta-note" id="slipNoLabel">未保存</span>
+            <span class="meta-note" id="slipNoLabel">伝票Noは保存後に表示されます</span>
         </div>
         <h1>新規登録</h1>
-        <p class="intro">品番検索結果を編集しながら保存できます。保存成功時は伝票番号をモーダルでお知らせし、現在の画面内容を Excel 形式で出力できます。</p>
+        <p class="intro">担当者情報と媒体情報を入力し、品番検索で明細を追加します。保存すると伝票番号が採番され、Excel出力も現在の画面内容で実行できます。</p>
     </section>
 
     <section class="panel">
@@ -262,7 +176,7 @@
 
     <section class="panel media-block">
         <div class="media-header">
-            <span class="meta-note">媒体名・発売日・備考はヘッダ情報として最大10行まで追加できます。</span>
+            <span class="meta-note">媒体情報は最大10行まで追加できます。媒体名の横に企画名を入力し、発売日と媒体側の備考を管理します。</span>
             <button type="button" id="addMediaRowButton" class="secondary">媒体情報を追加</button>
         </div>
         <div id="mediaRows" class="media-rows"></div>
@@ -272,7 +186,7 @@
         <label for="codeInput">品番</label>
         <div class="search-row">
             <input type="text" id="codeInput" inputmode="numeric" placeholder="品番を入力（8桁）" maxlength="8" autocomplete="off">
-            <span class="hint">半角数字8桁で入力して Enter で検索します。</span>
+            <span class="hint">8桁の半角数字を入力して Enter を押すと、Google Sheets から明細を追加します。</span>
         </div>
         <div id="message" aria-live="polite"></div>
         <div class="action-buttons">
@@ -291,11 +205,12 @@
                     <th>価格</th>
                     <th>税込価格</th>
                     <th>クレジット</th>
+                    <th>明細備考</th>
                 </tr>
                 </thead>
                 <tbody id="resultTable">
                 <tr id="emptyRow">
-                    <td class="empty" colspan="5">まだ検索結果がありません。品番を入力して Enter で追加できます。</td>
+                    <td class="empty" colspan="6">品番を入力して Enter を押すと、ここに明細が追加されます。</td>
                 </tr>
                 </tbody>
             </table>
@@ -306,11 +221,10 @@
 <div class="modal" id="saveModal" aria-hidden="true">
     <div class="modal-card">
         <h2>保存完了</h2>
-        <p id="saveModalMessage">伝票No.で保存しました</p>
+        <p id="saveModalMessage">伝票No.000000000で保存しました。</p>
         <button type="button" id="closeModalButton" class="primary">閉じる</button>
     </div>
 </div>
-
 <script>
     const maxRows = 10;
     const codeInput = document.getElementById("codeInput");
@@ -355,7 +269,7 @@
         }
 
         if (document.querySelectorAll("#resultTable tr[data-detail-row='true']").length >= maxRows) {
-            setMessage("最大10行までです。", "error");
+            setMessage("明細は最大10行まで追加できます。", "error");
             return;
         }
 
@@ -378,7 +292,7 @@
 
     addMediaRowButton.addEventListener("click", () => {
         if (mediaRows.querySelectorAll("[data-media-row='true']").length >= maxRows) {
-            setMessage("媒体情報は最大10行までです。", "error");
+            setMessage("媒体情報は最大10行まで追加できます。", "error");
             return;
         }
         appendMediaRow();
@@ -403,6 +317,10 @@
                 <input type="text" data-media-name value="${escapeHtml(values.mediaName ?? "")}">
             </div>
             <div class="field">
+                <label>企画名</label>
+                <input type="text" data-project-name value="${escapeHtml(values.projectName ?? "")}">
+            </div>
+            <div class="field">
                 <label>発売日</label>
                 <input type="date" data-release-date value="${escapeHtml(values.releaseDate ?? "")}">
             </div>
@@ -410,7 +328,7 @@
                 <label>備考</label>
                 <input type="text" data-note value="${escapeHtml(values.note ?? "")}">
             </div>
-            <button type="button" class="remove-btn" data-remove-media>削除</button>
+            <button type="button" class="remove-btn" data-remove-media>行削除</button>
         `;
 
         row.querySelector("[data-remove-media]").addEventListener("click", () => {
@@ -440,10 +358,10 @@
             <td><input type="text" value="${escapeHtml(String(basePrice))}"></td>
             <td><input type="text" value="${escapeHtml(taxIncludedDisplay)}"></td>
             <td><input type="text" value=""></td>
+            <td><input type="text" value=""></td>
         `;
         resultTable.appendChild(row);
     }
-
     async function saveSlip() {
         const payload = buildSlipPayload();
         if (!payload) {
@@ -465,7 +383,7 @@
             }
 
             currentSlipNo = data.slipNo || "";
-            slipNoLabel.textContent = currentSlipNo ? `伝票No.${currentSlipNo}` : "未保存";
+            slipNoLabel.textContent = currentSlipNo ? `伝票No.${currentSlipNo}` : "伝票Noは保存後に表示されます";
             openSaveModal(currentSlipNo);
             setMessage(`伝票No.${currentSlipNo} で保存しました。`, "success");
         } catch (error) {
@@ -482,7 +400,7 @@
         }
 
         exportButton.disabled = true;
-        setMessage("Excelを出力中です...", "");
+        setMessage("Excel出力を準備しています...", "");
 
         try {
             const response = await fetch("/api/export", {
@@ -509,7 +427,7 @@
             link.remove();
             URL.revokeObjectURL(url);
 
-            setMessage("Excelを出力しました。", "success");
+            setMessage("Excelをダウンロードしました。", "success");
         } catch (error) {
             setMessage(error.message || "Excel出力に失敗しました。", "error");
         } finally {
@@ -520,7 +438,7 @@
     function buildSlipPayload() {
         const details = collectDetails();
         if (!details.length) {
-            setMessage("保存する明細がありません。", "error");
+            setMessage("保存する前に明細を追加してください。", "error");
             return null;
         }
         if (!loanDateInput.value) {
@@ -542,7 +460,7 @@
     function buildExcelPayload() {
         const details = collectDetailsForExcel();
         if (!details.length) {
-            setMessage("出力する明細がありません。", "error");
+            setMessage("出力する前に明細を追加してください。", "error");
             return null;
         }
         return {
@@ -566,7 +484,8 @@
                 name: normalizeText(inputs[1].value),
                 price: toNullableInt(inputs[2].value),
                 taxPrice: toNullableInt(inputs[3].value),
-                credit: normalizeText(inputs[4].value)
+                credit: normalizeText(inputs[4].value),
+                note: normalizeText(inputs[5].value)
             };
         });
     }
@@ -582,14 +501,14 @@
                 taxPrice: toNullableInt(inputs[3].value),
                 mediaName: "",
                 releaseDate: null,
-                note: ""
+                note: normalizeText(inputs[5].value)
             };
         });
     }
-
     function collectMediaEntries() {
         return Array.from(document.querySelectorAll("[data-media-row='true']")).map((row) => ({
             mediaName: normalizeText(row.querySelector("[data-media-name]").value),
+            projectName: normalizeText(row.querySelector("[data-project-name]").value),
             releaseDate: normalizeText(row.querySelector("[data-release-date]").value) || null,
             note: normalizeText(row.querySelector("[data-note]").value)
         }));

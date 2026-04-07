@@ -2,6 +2,7 @@ CREATE TABLE IF NOT EXISTS slip_media (
     id INT AUTO_INCREMENT PRIMARY KEY,
     slip_id INT,
     media_name VARCHAR(100),
+    project_name VARCHAR(100),
     release_date DATE,
     note VARCHAR(255),
     CONSTRAINT fk_slip_media_slip
