@@ -29,6 +29,7 @@ import com.example.demo.controller.HelloController;
 import com.example.demo.controller.MasterController;
 import com.example.demo.controller.ReturnApiController;
 import com.example.demo.controller.SheetController;
+import com.example.demo.controller.SlipExcelController;
 import com.example.demo.controller.SlipSearchApiController;
 import com.example.demo.controller.TopController;
 import com.example.demo.dto.SheetSearchResponse;
@@ -41,6 +42,7 @@ import com.example.demo.mapper.SlipMapper;
 import com.example.demo.mapper.SlipMediaMapper;
 import com.example.demo.mapper.TodoMapper;
 import com.example.demo.service.GoogleSheetsService;
+import com.example.demo.service.SlipExcelService;
 import com.example.demo.service.SlipService;
 
 @WebMvcTest({
@@ -48,6 +50,7 @@ import com.example.demo.service.SlipService;
         TopController.class,
         MasterController.class,
         ExcelExportController.class,
+        SlipExcelController.class,
         SheetController.class,
         ReturnApiController.class,
         SlipSearchApiController.class
@@ -77,6 +80,9 @@ class DemoApplicationTests {
 
     @MockBean
     private SlipService slipService;
+
+    @MockBean
+    private SlipExcelService slipExcelService;
 
     @Test
     void helloPageReturnsExpectedMessage() throws Exception {
@@ -279,5 +285,13 @@ class DemoApplicationTests {
                 .andExpect(status().isOk());
 
         verify(slipService).deleteBySlipNo("202604001");
+    }
+
+    @Test
+    void excelTemplateExportDelegatesToService() throws Exception {
+        mockMvc.perform(get("/excel/export/202604001"))
+                .andExpect(status().isOk());
+
+        verify(slipExcelService).exportSlip(ArgumentMatchers.eq("202604001"), ArgumentMatchers.any());
     }
 }

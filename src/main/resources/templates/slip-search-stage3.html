@@ -155,6 +155,7 @@
         <div class="action-row">
             <div id="resultMeta">検索結果はまだありません。</div>
             <div class="action-buttons">
+                <button type="button" id="downloadButton" class="secondary">Excel出力</button>
                 <button type="button" id="updateButton" class="primary">更新</button>
                 <button type="button" id="deleteButton" class="danger">削除</button>
             </div>
@@ -203,6 +204,7 @@
     const codeInput = document.getElementById("codeInput");
     const searchSlipButton = document.getElementById("searchSlipButton");
     const searchCodeButton = document.getElementById("searchCodeButton");
+    const downloadButton = document.getElementById("downloadButton");
     const updateButton = document.getElementById("updateButton");
     const deleteButton = document.getElementById("deleteButton");
     const resultTable = document.getElementById("resultTable");
@@ -218,6 +220,7 @@
 
     searchSlipButton.addEventListener("click", () => runSearch("slip"));
     searchCodeButton.addEventListener("click", () => runSearch("code"));
+    downloadButton.addEventListener("click", downloadExcel);
     updateButton.addEventListener("click", updateSlip);
     deleteButton.addEventListener("click", openDeleteModal);
     cancelDeleteButton.addEventListener("click", closeDeleteModal);
@@ -327,6 +330,15 @@
     function closeDeleteModal() {
         deleteModal.classList.remove("is-open");
         deleteModal.setAttribute("aria-hidden", "true");
+    }
+
+    function downloadExcel() {
+        const slipNo = resolveDeletableSlipNo() || slipNoInput.value.trim();
+        if (!slipNo) {
+            setMessage("Excel出力する伝票Noを入力してください。", "error");
+            return;
+        }
+        window.location.href = `/excel/export/${encodeURIComponent(slipNo)}`;
     }
 
     async function deleteSlip() {

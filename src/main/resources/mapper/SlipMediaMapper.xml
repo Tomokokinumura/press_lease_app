@@ -21,6 +21,18 @@
         )
     </insert>
 
+    <select id="findBySlipId" resultType="com.example.demo.entity.SlipMedia">
+        SELECT id,
+               slip_id,
+               media_name,
+               project_name,
+               release_date,
+               note
+        FROM slip_media
+        WHERE slip_id = #{slipId}
+        ORDER BY id
+    </select>
+
     <delete id="deleteBySlipId">
         DELETE FROM slip_media
         WHERE slip_id = #{slipId}

@@ -10,6 +10,8 @@ public interface SlipMapper {
 
     void insert(Slip slip);
 
+    Slip findBySlipNo(@Param("slipNo") String slipNo);
+
     Integer findIdBySlipNo(@Param("slipNo") String slipNo);
 
     void updateHeader(Slip slip);

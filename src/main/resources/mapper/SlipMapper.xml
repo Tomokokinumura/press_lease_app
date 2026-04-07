@@ -31,6 +31,20 @@
         )
     </insert>
 
+    <select id="findBySlipNo" resultType="com.example.demo.entity.Slip">
+        SELECT id,
+               slip_no,
+               staff_name,
+               customer_name,
+               contact_info,
+               email_address,
+               loan_date,
+               return_date,
+               created_at
+        FROM slip
+        WHERE slip_no = #{slipNo}
+    </select>
+
     <select id="findIdBySlipNo" resultType="int">
         SELECT id
         FROM slip
