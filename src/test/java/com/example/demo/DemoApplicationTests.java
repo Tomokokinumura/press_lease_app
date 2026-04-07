@@ -34,6 +34,7 @@ import com.example.demo.controller.SlipSearchApiController;
 import com.example.demo.controller.TopController;
 import com.example.demo.dto.SheetSearchResponse;
 import com.example.demo.dto.SlipDetailDto;
+import com.example.demo.dto.SlipEditResponse;
 import com.example.demo.entity.MasterSetting;
 import com.example.demo.entity.SlipDetail;
 import com.example.demo.mapper.MasterSettingMapper;
@@ -248,6 +249,26 @@ class DemoApplicationTests {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].slipNo").value("202604001"))
                 .andExpect(jsonPath("$[0].code").value("12345678"));
+    }
+
+    @Test
+    void slipEditApiReturnsSlipForEditing() throws Exception {
+        SlipEditResponse response = new SlipEditResponse();
+        response.setSlipNo("202604001");
+        response.setStaffName("担当者A");
+
+        SlipDetail detail = new SlipDetail();
+        detail.setCode("12345678");
+        detail.setName("Product A");
+        response.setDetails(List.of(detail));
+
+        given(slipService.loadSlipForEdit("202604001")).willReturn(response);
+
+        mockMvc.perform(get("/api/slip/edit").param("slipNo", "202604001"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.slipNo").value("202604001"))
+                .andExpect(jsonPath("$.staffName").value("担当者A"))
+                .andExpect(jsonPath("$.details[0].code").value("12345678"));
     }
 
     @Test

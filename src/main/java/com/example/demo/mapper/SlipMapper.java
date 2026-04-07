@@ -14,6 +14,8 @@ public interface SlipMapper {
 
     Integer findIdBySlipNo(@Param("slipNo") String slipNo);
 
+    void updateSlip(Slip slip);
+
     void updateHeader(Slip slip);
 
     void delete(@Param("id") Integer id);

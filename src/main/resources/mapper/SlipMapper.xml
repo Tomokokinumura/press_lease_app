@@ -51,6 +51,17 @@
         WHERE slip_no = #{slipNo}
     </select>
 
+    <update id="updateSlip" parameterType="com.example.demo.entity.Slip">
+        UPDATE slip
+        SET staff_name = #{staffName},
+            customer_name = #{customerName},
+            contact_info = #{contactInfo},
+            email_address = #{emailAddress},
+            loan_date = #{loanDate},
+            return_date = #{returnDate}
+        WHERE id = #{id}
+    </update>
+
     <update id="updateHeader" parameterType="com.example.demo.entity.Slip">
         UPDATE slip
         SET loan_date = #{loanDate},

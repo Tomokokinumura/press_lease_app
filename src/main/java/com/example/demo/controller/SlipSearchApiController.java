@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.demo.dto.SlipDetailDto;
+import com.example.demo.dto.SlipEditResponse;
 import com.example.demo.service.SlipService;
 
 @RestController
@@ -30,6 +31,11 @@ public class SlipSearchApiController {
     @GetMapping("/code")
     public List<SlipDetailDto> searchByCode(@RequestParam String code) {
         return slipService.findByCode(code);
+    }
+
+    @GetMapping("/edit")
+    public SlipEditResponse getSlipForEdit(@RequestParam String slipNo) {
+        return slipService.loadSlipForEdit(slipNo);
     }
 
     @PostMapping("/update")

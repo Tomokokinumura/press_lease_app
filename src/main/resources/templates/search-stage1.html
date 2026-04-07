@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>新規登録</title>
+    <title>新規登録 / 編集</title>
     <style>
         :root {
             --bg: #f6f1e8;
@@ -141,11 +141,16 @@
             <a href="/">トップへ戻る</a>
             <span class="meta-note" id="slipNoLabel">伝票Noは保存後に表示されます</span>
         </div>
-        <h1>新規登録</h1>
-        <p class="intro">担当者情報と媒体情報を入力し、品番検索で明細を追加します。保存すると伝票番号が採番され、Excel出力も現在の画面内容で実行できます。</p>
+        <h1>新規登録 / 編集</h1>
+        <p class="intro">新規登録では品番検索で明細を追加し、編集では伝票Noを読み込んで伝票単位で更新できます。保存すると新規時は採番、編集時は上書き保存されます。</p>
     </section>
 
     <section class="panel">
+        <div class="search-row" style="margin-bottom: 18px;">
+            <input type="text" id="editSlipNo" placeholder="編集する伝票Noを入力" autocomplete="off">
+            <button type="button" id="loadSlipButton" class="secondary">伝票読込</button>
+            <span class="hint">伝票Noを入力して読込むと、保存済みデータを編集できます。</span>
+        </div>
         <div class="header-grid">
             <div class="field">
                 <label for="staffName">担当者名</label>
@@ -234,6 +239,7 @@
     const saveButton = document.getElementById("saveButton");
     const exportButton = document.getElementById("exportButton");
     const addMediaRowButton = document.getElementById("addMediaRowButton");
+    const loadSlipButton = document.getElementById("loadSlipButton");
     const mediaRows = document.getElementById("mediaRows");
     const slipNoLabel = document.getElementById("slipNoLabel");
     const saveModal = document.getElementById("saveModal");
@@ -241,6 +247,7 @@
     const closeModalButton = document.getElementById("closeModalButton");
 
     const staffNameInput = document.getElementById("staffName");
+    const editSlipNoInput = document.getElementById("editSlipNo");
     const customerNameInput = document.getElementById("customerName");
     const contactInfoInput = document.getElementById("contactInfo");
     const emailAddressInput = document.getElementById("emailAddress");
@@ -251,6 +258,11 @@
 
     loanDateInput.value = new Date().toLocaleDateString("en-CA");
     appendMediaRow();
+    const initialSlipNo = new URLSearchParams(window.location.search).get("slipNo");
+    if (initialSlipNo) {
+        editSlipNoInput.value = initialSlipNo;
+        loadSlip(initialSlipNo);
+    }
 
     codeInput.addEventListener("input", function () {
         this.value = this.value.replace(/\D/g, "").slice(0, 8);
@@ -298,6 +310,7 @@
         appendMediaRow();
     });
 
+    loadSlipButton.addEventListener("click", () => loadSlip(editSlipNoInput.value.trim()));
     saveButton.addEventListener("click", saveSlip);
     exportButton.addEventListener("click", exportExcel);
     closeModalButton.addEventListener("click", closeSaveModal);
@@ -362,6 +375,78 @@
         `;
         resultTable.appendChild(row);
     }
+
+    async function loadSlip(slipNo) {
+        if (!slipNo) {
+            setMessage("編集する伝票Noを入力してください。", "error");
+            return;
+        }
+
+        loadSlipButton.disabled = true;
+        setMessage("伝票を読み込んでいます...", "");
+
+        try {
+            const response = await fetch(`/api/slip/edit?slipNo=${encodeURIComponent(slipNo)}`);
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+                throw new Error(data.message || "伝票の読込に失敗しました。");
+            }
+
+            applySlipData(data);
+            currentSlipNo = data.slipNo || slipNo;
+            editSlipNoInput.value = currentSlipNo;
+            slipNoLabel.textContent = `伝票No.${currentSlipNo}`;
+            history.replaceState(null, "", `/search?slipNo=${encodeURIComponent(currentSlipNo)}`);
+            setMessage(`伝票No.${currentSlipNo} を読み込みました。`, "success");
+        } catch (error) {
+            setMessage(error.message || "伝票の読込に失敗しました。", "error");
+        } finally {
+            loadSlipButton.disabled = false;
+        }
+    }
+
+    function applySlipData(data) {
+        staffNameInput.value = data.staffName ?? "";
+        customerNameInput.value = data.customerName ?? "";
+        contactInfoInput.value = data.contactInfo ?? "";
+        emailAddressInput.value = data.emailAddress ?? "";
+        loanDateInput.value = data.loanDate ?? "";
+        returnDateInput.value = data.returnDate ?? "";
+
+        mediaRows.innerHTML = "";
+        const mediaEntries = Array.isArray(data.mediaEntries) ? data.mediaEntries : [];
+        if (mediaEntries.length) {
+            mediaEntries.forEach((entry) => appendMediaRow(entry));
+        } else {
+            appendMediaRow();
+        }
+
+        resultTable.innerHTML = "";
+        const details = Array.isArray(data.details) ? data.details : [];
+        if (details.length) {
+            details.forEach((detail) => appendExistingDetailRow(detail));
+        } else {
+            resultTable.innerHTML = `<tr id="${emptyRowId}"><td class="empty" colspan="6">品番を入力して Enter を押すと、ここに明細が追加されます。</td></tr>`;
+        }
+    }
+
+    function appendExistingDetailRow(detail) {
+        const emptyRow = document.getElementById(emptyRowId);
+        if (emptyRow) {
+            emptyRow.remove();
+        }
+        const row = document.createElement("tr");
+        row.dataset.detailRow = "true";
+        row.innerHTML = `
+            <td><input type="text" value="${escapeHtml(detail.code ?? "")}"></td>
+            <td><input type="text" value="${escapeHtml(detail.name ?? "")}"></td>
+            <td><input type="text" value="${escapeHtml(detail.price ?? "")}"></td>
+            <td><input type="text" value="${escapeHtml(detail.taxPrice ?? "")}"></td>
+            <td><input type="text" value="${escapeHtml(detail.credit ?? "")}"></td>
+            <td><input type="text" value="${escapeHtml(detail.note ?? "")}"></td>
+        `;
+        resultTable.appendChild(row);
+    }
     async function saveSlip() {
         const payload = buildSlipPayload();
         if (!payload) {
@@ -383,7 +468,11 @@
             }
 
             currentSlipNo = data.slipNo || "";
+            editSlipNoInput.value = currentSlipNo;
             slipNoLabel.textContent = currentSlipNo ? `伝票No.${currentSlipNo}` : "伝票Noは保存後に表示されます";
+            if (currentSlipNo) {
+                history.replaceState(null, "", `/search?slipNo=${encodeURIComponent(currentSlipNo)}`);
+            }
             openSaveModal(currentSlipNo);
             setMessage(`伝票No.${currentSlipNo} で保存しました。`, "success");
         } catch (error) {
@@ -446,6 +535,7 @@
             return null;
         }
         return {
+            slipNo: currentSlipNo || normalizeText(editSlipNoInput.value) || null,
             staffName: normalizeText(staffNameInput.value),
             customerName: normalizeText(customerNameInput.value),
             contactInfo: normalizeText(contactInfoInput.value),

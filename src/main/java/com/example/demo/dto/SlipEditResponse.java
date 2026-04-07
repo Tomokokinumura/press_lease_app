@@ -7,7 +7,7 @@ import java.util.List;
 import com.example.demo.entity.SlipDetail;
 import com.example.demo.entity.SlipMedia;
 
-public class SlipRequest {
+public class SlipEditResponse {
 
     private String slipNo;
     private String staffName;

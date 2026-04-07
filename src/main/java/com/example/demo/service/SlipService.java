@@ -14,6 +14,7 @@ import org.springframework.web.server.ResponseStatusException;
 import org.springframework.http.HttpStatus;
 
 import com.example.demo.dto.SlipDetailDto;
+import com.example.demo.dto.SlipEditResponse;
 import com.example.demo.dto.SaveSlipResponse;
 import com.example.demo.dto.SlipRequest;
 import com.example.demo.entity.Slip;
@@ -49,18 +50,7 @@ public class SlipService {
     @Transactional
     public SaveSlipResponse saveSlip(SlipRequest request) {
         validateRequest(request);
-
-        String slipNo = generateSlipNo();
-
-        Slip slip = new Slip();
-        slip.setSlipNo(slipNo);
-        slip.setStaffName(request.getStaffName());
-        slip.setCustomerName(request.getCustomerName());
-        slip.setContactInfo(request.getContactInfo());
-        slip.setEmailAddress(request.getEmailAddress());
-        slip.setLoanDate(request.getLoanDate());
-        slip.setReturnDate(request.getReturnDate());
-        slipMapper.insert(slip);
+        Slip slip = resolveSlipForSave(request);
 
         List<SlipDetail> details = request.getDetails().stream()
                 .filter(this::hasMeaningfulDetail)
@@ -80,7 +70,7 @@ public class SlipService {
             slipMediaMapper.insert(media);
         }
 
-        return new SaveSlipResponse(slipNo, details.size());
+        return new SaveSlipResponse(slip.getSlipNo(), details.size());
     }
 
     public List<SlipDetailDto> findBySlipNo(String slipNo) {
@@ -95,6 +85,29 @@ public class SlipService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Code is required.");
         }
         return enrichWithMediaRows(slipDetailMapper.findSlipRowsByCode(code.trim()));
+    }
+
+    public SlipEditResponse loadSlipForEdit(String slipNo) {
+        if (!hasText(slipNo)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Slip number is required.");
+        }
+
+        Slip slip = slipMapper.findBySlipNo(slipNo.trim());
+        if (slip == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Slip not found: " + slipNo);
+        }
+
+        SlipEditResponse response = new SlipEditResponse();
+        response.setSlipNo(slip.getSlipNo());
+        response.setStaffName(slip.getStaffName());
+        response.setCustomerName(slip.getCustomerName());
+        response.setContactInfo(slip.getContactInfo());
+        response.setEmailAddress(slip.getEmailAddress());
+        response.setLoanDate(slip.getLoanDate());
+        response.setReturnDate(slip.getReturnDate());
+        response.setDetails(slipDetailMapper.findBySlipNo(slip.getSlipNo()));
+        response.setMediaEntries(slipMediaMapper.findBySlipId(slip.getId()));
+        return response;
     }
 
     @Transactional
@@ -185,6 +198,38 @@ public class SlipService {
                 || hasText(media.getProjectName())
                 || hasText(media.getNote())
                 || media.getReleaseDate() != null);
+    }
+
+    private Slip resolveSlipForSave(SlipRequest request) {
+        if (hasText(request.getSlipNo())) {
+            Slip existingSlip = slipMapper.findBySlipNo(request.getSlipNo().trim());
+            if (existingSlip == null) {
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Slip not found: " + request.getSlipNo());
+            }
+
+            existingSlip.setStaffName(request.getStaffName());
+            existingSlip.setCustomerName(request.getCustomerName());
+            existingSlip.setContactInfo(request.getContactInfo());
+            existingSlip.setEmailAddress(request.getEmailAddress());
+            existingSlip.setLoanDate(request.getLoanDate());
+            existingSlip.setReturnDate(request.getReturnDate());
+            slipMapper.updateSlip(existingSlip);
+            slipDetailMapper.deleteBySlipId(existingSlip.getId());
+            slipMediaMapper.deleteBySlipId(existingSlip.getId());
+            return existingSlip;
+        }
+
+        String slipNo = generateSlipNo();
+        Slip slip = new Slip();
+        slip.setSlipNo(slipNo);
+        slip.setStaffName(request.getStaffName());
+        slip.setCustomerName(request.getCustomerName());
+        slip.setContactInfo(request.getContactInfo());
+        slip.setEmailAddress(request.getEmailAddress());
+        slip.setLoanDate(request.getLoanDate());
+        slip.setReturnDate(request.getReturnDate());
+        slipMapper.insert(slip);
+        return slip;
     }
 
     private List<SlipDetailDto> enrichWithMediaRows(List<SlipDetailDto> rows) {
