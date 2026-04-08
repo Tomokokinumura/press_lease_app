@@ -152,7 +152,7 @@ class DemoApplicationTests {
                         .param("id", "1")
                         .param("masterText", "updated text"))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/master"));
+                .andExpect(redirectedUrl("/master?saved=1"));
 
         verify(masterSettingMapper).update(ArgumentMatchers.argThat(master ->
                 master.getId() == 1 && "updated text".equals(master.getMasterText())));
@@ -255,7 +255,7 @@ class DemoApplicationTests {
     void slipEditApiReturnsSlipForEditing() throws Exception {
         SlipEditResponse response = new SlipEditResponse();
         response.setSlipNo("202604001");
-        response.setStaffName("担当者A");
+        response.setStaffName("諡・ｽ楢・");
 
         SlipDetail detail = new SlipDetail();
         detail.setCode("12345678");
@@ -267,7 +267,7 @@ class DemoApplicationTests {
         mockMvc.perform(get("/api/slip/edit").param("slipNo", "202604001"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.slipNo").value("202604001"))
-                .andExpect(jsonPath("$.staffName").value("担当者A"))
+                .andExpect(jsonPath("$.staffName").value("諡・ｽ楢・"))
                 .andExpect(jsonPath("$.details[0].code").value("12345678"));
     }
 

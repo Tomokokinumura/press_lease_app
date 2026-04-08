@@ -102,6 +102,25 @@
             color: var(--muted);
         }
         .status-badge.is-returned { background: #e5f3ea; color: var(--success); }
+        .modal {
+            position: fixed;
+            inset: 0;
+            display: none;
+            place-items: center;
+            background: rgba(45, 36, 24, 0.45);
+            padding: 24px;
+        }
+        .modal.is-open { display: grid; }
+        .modal-card {
+            width: min(420px, 100%);
+            background: #fff;
+            border-radius: 18px;
+            padding: 24px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.18);
+        }
+        .modal-card h2 { margin: 0 0 12px; }
+        .modal-card p { margin: 0 0 18px; line-height: 1.7; }
+        .modal-actions { display: flex; justify-content: flex-end; }
         @media (max-width: 700px) {
             .search-row { align-items: stretch; }
             .field { min-width: 100%; }
@@ -157,6 +176,15 @@
         </div>
     </section>
 </main>
+<div id="updateModal" class="modal" aria-hidden="true">
+    <div class="modal-card">
+        <h2>更新完了</h2>
+        <p>返却状態を更新しました。</p>
+        <div class="modal-actions">
+            <button type="button" id="closeModalButton" class="primary">閉じる</button>
+        </div>
+    </div>
+</div>
 
 <script>
     const slipNoInput = document.getElementById("slipNo");
@@ -164,13 +192,21 @@
     const updateButton = document.getElementById("updateButton");
     const resultTable = document.getElementById("resultTable");
     const message = document.getElementById("message");
+    const updateModal = document.getElementById("updateModal");
+    const closeModalButton = document.getElementById("closeModalButton");
 
     searchButton.addEventListener("click", searchSlip);
     updateButton.addEventListener("click", updateReturn);
+    closeModalButton.addEventListener("click", closeUpdateModal);
     slipNoInput.addEventListener("keydown", (event) => {
         if (event.key === "Enter") {
             event.preventDefault();
             searchSlip();
+        }
+    });
+    updateModal.addEventListener("click", (event) => {
+        if (event.target === updateModal) {
+            closeUpdateModal();
         }
     });
 
@@ -239,6 +275,7 @@
             });
 
             setMessage("返却状態を更新しました。", "success");
+            openUpdateModal();
         } catch (error) {
             setMessage(error.message || "返却状態の更新に失敗しました。", "error");
         } finally {
@@ -285,6 +322,16 @@
         } else {
             delete message.dataset.state;
         }
+    }
+
+    function openUpdateModal() {
+        updateModal.classList.add("is-open");
+        updateModal.setAttribute("aria-hidden", "false");
+    }
+
+    function closeUpdateModal() {
+        updateModal.classList.remove("is-open");
+        updateModal.setAttribute("aria-hidden", "true");
     }
 
     function escapeHtml(value) {

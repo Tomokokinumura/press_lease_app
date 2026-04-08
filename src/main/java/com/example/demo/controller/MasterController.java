@@ -31,7 +31,7 @@ public class MasterController {
         MasterSetting current = getOrCreateSetting();
         current.setMasterText(master.getMasterText());
         masterSettingMapper.update(current);
-        return "redirect:/master";
+        return "redirect:/master?saved=1";
     }
 
     private MasterSetting getOrCreateSetting() {
