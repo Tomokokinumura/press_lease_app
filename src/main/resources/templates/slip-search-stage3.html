@@ -42,24 +42,57 @@
             display: flex;
             gap: 10px;
             flex-wrap: wrap;
-            margin-top: 16px;
+            margin-top: 18px;
+            align-items: flex-end;
         }
         .tab-link {
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            padding: 11px 18px;
+            min-width: 148px;
+            padding: 14px 20px 12px;
             border: 1px solid var(--line);
-            border-radius: 999px;
-            background: var(--surface);
+            border-bottom: none;
+            border-radius: 18px 18px 0 0;
             color: var(--text);
             text-decoration: none;
             font-weight: 700;
+            position: relative;
+            top: 1px;
+            box-shadow: 0 -6px 16px rgba(88, 62, 30, 0.08);
+            transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
         }
+        .tab-link::before,
+        .tab-link::after {
+            content: "";
+            position: absolute;
+            bottom: 0;
+            width: 18px;
+            height: 18px;
+            background: inherit;
+            border-bottom: 1px solid var(--line);
+        }
+        .tab-link::before {
+            left: -10px;
+            clip-path: polygon(100% 0, 100% 100%, 0 100%);
+        }
+        .tab-link::after {
+            right: -10px;
+            clip-path: polygon(0 0, 100% 100%, 0 100%);
+        }
+        .tab-link:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 -10px 20px rgba(88, 62, 30, 0.12);
+            filter: saturate(1.03);
+        }
+        .tab-link.is-new { background: #f6d9c9; }
+        .tab-link.is-return { background: #d9ead3; }
+        .tab-link.is-search { background: #d9e8fb; }
+        .tab-link.is-master { background: #eadcf8; }
         .tab-link.is-active {
-            background: var(--accent);
-            border-color: var(--accent-dark);
-            color: #fff;
+            transform: translateY(-4px);
+            box-shadow: 0 -12px 22px rgba(88, 62, 30, 0.14);
+            z-index: 1;
         }
         h1 { margin: 10px 0 0; font-size: clamp(28px, 4vw, 40px); }
         .intro { margin: 10px 0 0; color: var(--muted); line-height: 1.7; }
@@ -162,10 +195,10 @@
             <span id="activeSearchLabel">検索対象: 未選択</span>
         </div>
         <nav class="tabbar" aria-label="画面切替">
-            <a href="/search" class="tab-link">新規登録 / 編集</a>
-            <a href="/return" class="tab-link">返却登録</a>
-            <a href="/slip-search" class="tab-link is-active">伝票検索</a>
-            <a href="/master" class="tab-link">マスタ変更</a>
+            <a href="/search" class="tab-link is-new">新規登録 / 編集</a>
+            <a href="/return" class="tab-link is-return">返却登録</a>
+            <a href="/slip-search" class="tab-link is-search is-active">伝票検索</a>
+            <a href="/master" class="tab-link is-master">マスタ変更</a>
         </nav>
         <h1>伝票検索</h1>
         <p class="intro">伝票Noまたは品番で保存済みデータを検索し、伝票単位で編集画面へ移動できます。返却済みの明細は状態欄に表示されます。</p>
