@@ -37,6 +37,29 @@
         }
         .topbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
         .topbar a { color: var(--accent); text-decoration: none; font-weight: 700; }
+        .tabbar {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 16px;
+        }
+        .tab-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 11px 18px;
+            border: 1px solid var(--line);
+            border-radius: 999px;
+            background: var(--surface);
+            color: var(--text);
+            text-decoration: none;
+            font-weight: 700;
+        }
+        .tab-link.is-active {
+            background: var(--accent);
+            border-color: var(--accent-dark);
+            color: #fff;
+        }
         h1 { margin: 10px 0 0; font-size: clamp(28px, 4vw, 40px); }
         .intro { margin: 10px 0 0; color: var(--muted); line-height: 1.7; }
         .search-row { display: flex; gap: 12px; align-items: end; flex-wrap: wrap; }
@@ -135,6 +158,12 @@
             <a href="/">トップへ戻る</a>
             <span>返却済み管理</span>
         </div>
+        <nav class="tabbar" aria-label="画面切替">
+            <a href="/search" class="tab-link">新規登録 / 編集</a>
+            <a href="/return" class="tab-link is-active">返却登録</a>
+            <a href="/slip-search" class="tab-link">伝票検索</a>
+            <a href="/master" class="tab-link">マスタ変更</a>
+        </nav>
         <h1>返却登録</h1>
         <p class="intro">伝票番号で明細を呼び出し、返却済みチェックを更新します。チェックを入れた行は返却済み、外した行は未返却として保存されます。</p>
     </section>
