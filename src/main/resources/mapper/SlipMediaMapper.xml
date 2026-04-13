@@ -5,7 +5,7 @@
 
 <mapper namespace="com.example.demo.mapper.SlipMediaMapper">
 
-    <insert id="insert" parameterType="com.example.demo.entity.SlipMedia" useGeneratedKeys="true" keyProperty="id">
+    <insert id="insert" parameterType="com.example.demo.entity.SlipMedia" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
         INSERT INTO slip_media (
             slip_id,
             media_name,

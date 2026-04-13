@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS slip_media (
-    id INT AUTO_INCREMENT PRIMARY KEY,
+    id SERIAL PRIMARY KEY,
     slip_id INT,
     media_name VARCHAR(100),
     project_name VARCHAR(100),

@@ -1,5 +1,5 @@
-CREATE TABLE todo (
-    id INT PRIMARY KEY AUTO_INCREMENT,
+﻿CREATE TABLE todo (
+    id SERIAL PRIMARY KEY,
     title VARCHAR(100)
 );
 

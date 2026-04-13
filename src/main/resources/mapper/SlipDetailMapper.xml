@@ -5,7 +5,7 @@
 
 <mapper namespace="com.example.demo.mapper.SlipDetailMapper">
 
-    <insert id="insert" parameterType="com.example.demo.entity.SlipDetail" useGeneratedKeys="true" keyProperty="id">
+    <insert id="insert" parameterType="com.example.demo.entity.SlipDetail" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
         INSERT INTO slip_detail (
             slip_id,
             code,

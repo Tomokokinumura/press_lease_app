@@ -11,7 +11,7 @@
         WHERE slip_no LIKE CONCAT(#{ym}, '%')
     </select>
 
-    <insert id="insert" parameterType="com.example.demo.entity.Slip" useGeneratedKeys="true" keyProperty="id">
+    <insert id="insert" parameterType="com.example.demo.entity.Slip" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
         INSERT INTO slip (
             slip_no,
             staff_name,

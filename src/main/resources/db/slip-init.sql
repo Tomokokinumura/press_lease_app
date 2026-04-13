@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS slip (
-    id INT AUTO_INCREMENT PRIMARY KEY,
+    id SERIAL PRIMARY KEY,
     slip_no VARCHAR(20),
     staff_name VARCHAR(50),
     customer_name VARCHAR(100),
@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS slip (
 );
 
 CREATE TABLE IF NOT EXISTS slip_detail (
-    id INT AUTO_INCREMENT PRIMARY KEY,
+    id SERIAL PRIMARY KEY,
     slip_id INT,
     code VARCHAR(20),
     name VARCHAR(100),
