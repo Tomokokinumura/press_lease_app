@@ -22,6 +22,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.example.demo.controller.ExcelExportController;
@@ -75,6 +76,9 @@ class DemoApplicationTests {
 
     @MockBean
     private MasterSettingMapper masterSettingMapper;
+
+    @MockBean
+    private JdbcTemplate jdbcTemplate;
 
     @MockBean
     private GoogleSheetsService googleSheetsService;
@@ -255,7 +259,7 @@ class DemoApplicationTests {
     void slipEditApiReturnsSlipForEditing() throws Exception {
         SlipEditResponse response = new SlipEditResponse();
         response.setSlipNo("202604001");
-        response.setStaffName("諡・ｽ楢・");
+        response.setStaffName("担当者A");
 
         SlipDetail detail = new SlipDetail();
         detail.setCode("12345678");
@@ -267,7 +271,7 @@ class DemoApplicationTests {
         mockMvc.perform(get("/api/slip/edit").param("slipNo", "202604001"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.slipNo").value("202604001"))
-                .andExpect(jsonPath("$.staffName").value("諡・ｽ楢・"))
+                .andExpect(jsonPath("$.staffName").value("担当者A"))
                 .andExpect(jsonPath("$.details[0].code").value("12345678"));
     }
 
@@ -316,4 +320,3 @@ class DemoApplicationTests {
         verify(slipExcelService).exportSlip(ArgumentMatchers.eq("202604001"), ArgumentMatchers.any());
     }
 }
-
