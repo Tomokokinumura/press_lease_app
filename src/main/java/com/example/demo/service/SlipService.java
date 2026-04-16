@@ -130,6 +130,7 @@ public class SlipService {
     }
 
     public List<SlipDetailDto> findBySlipNo(String slipNo) {
+        ensureSlipTables();
         if (!hasText(slipNo)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Slip number is required.");
         }
@@ -137,6 +138,7 @@ public class SlipService {
     }
 
     public List<SlipDetailDto> findByCode(String code) {
+        ensureSlipTables();
         if (!hasText(code)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Code is required.");
         }
@@ -144,6 +146,7 @@ public class SlipService {
     }
 
     public SlipEditResponse loadSlipForEdit(String slipNo) {
+        ensureSlipTables();
         if (!hasText(slipNo)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Slip number is required.");
         }
