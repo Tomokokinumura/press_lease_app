@@ -3,9 +3,107 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hello Page</title>
+    <title>Supabase Todo</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: #f7f4ee;
+            font-family: "Yu Gothic UI", "Hiragino Sans", sans-serif;
+            color: #2d2418;
+        }
+        .page {
+            width: min(760px, calc(100vw - 32px));
+            margin: 32px auto;
+            padding: 32px;
+            background: #fffdf8;
+            border: 1px solid #d9ccb7;
+            border-radius: 20px;
+            box-shadow: 0 18px 40px rgba(88, 62, 30, 0.08);
+        }
+        h1 {
+            margin: 0 0 16px;
+            font-size: 32px;
+        }
+        .lead {
+            margin: 0 0 24px;
+            color: #5c4a33;
+        }
+        .form-row {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        input[type="text"] {
+            flex: 1;
+            padding: 12px 14px;
+            border: 1px solid #d9ccb7;
+            border-radius: 12px;
+            font-size: 16px;
+        }
+        button {
+            padding: 12px 18px;
+            border: 0;
+            border-radius: 12px;
+            background: #b85c38;
+            color: #fff;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        button:disabled {
+            opacity: 0.6;
+            cursor: default;
+        }
+        .status {
+            min-height: 24px;
+            margin-bottom: 16px;
+            color: #5c4a33;
+        }
+        .status[data-state="error"] {
+            color: #b42318;
+        }
+        .status[data-state="success"] {
+            color: #027a48;
+        }
+        ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+        li {
+            margin-bottom: 8px;
+        }
+        .config-note {
+            margin-top: 20px;
+            font-size: 13px;
+            color: #7a6a55;
+        }
+        @media (max-width: 640px) {
+            .page {
+                margin: 16px;
+                padding: 20px;
+            }
+            .form-row {
+                flex-direction: column;
+            }
+        }
+    </style>
 </head>
 <body>
-    <h1 th:text="${message}">Hello! Spring Boot</h1>
+    <main class="page"
+          id="todoApp"
+          th:attr="data-supabase-url=${supabaseUrl},data-supabase-anon-key=${supabaseAnonKey}">
+        <h1 th:text="${message}">Hello! Spring Boot</h1>
+        <p class="lead">Keep the current Spring Boot page structure and read/write the Supabase todo table.</p>
+        <div class="form-row">
+            <input type="text" id="taskInput" placeholder="New task" maxlength="100">
+            <button type="button" id="addButton" onclick="addTodo()">Add</button>
+        </div>
+        <p class="status" id="statusMessage">Initializing Supabase connection...</p>
+        <ul id="todoList"></ul>
+        <p class="config-note">Set SUPABASE_ANON_KEY before using this page. Use the public anon key in the browser.</p>
+    </main>
+    <script src="/app.js"></script>
 </body>
 </html>
