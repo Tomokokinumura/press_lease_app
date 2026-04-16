@@ -39,13 +39,20 @@ public class ReturnApiController {
         }
 
         for (SlipDetail detail : details) {
-            if (detail == null || detail.getId() == null) {
+            if (detail == null) {
                 continue;
             }
 
             boolean returned = Boolean.TRUE.equals(detail.getReturned());
             detail.setReturned(returned);
             detail.setReturnedDate(returned ? LocalDate.now() : null);
+            if (detail.getId() == null) {
+                if (detail.getSlipId() == null) {
+                    continue;
+                }
+                slipDetailMapper.insert(detail);
+                continue;
+            }
             slipDetailMapper.updateReturn(detail);
         }
     }

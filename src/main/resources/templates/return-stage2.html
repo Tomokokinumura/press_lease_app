@@ -238,11 +238,12 @@
                     <th>クレジット</th>
                     <th>状態</th>
                     <th>掲載予定</th>
+                    <th>コピー</th>
                 </tr>
                 </thead>
                 <tbody id="resultTable">
                 <tr id="emptyRow">
-                    <td colspan="8" class="empty">伝票Noを入力して検索してください。</td>
+                    <td colspan="9" class="empty">伝票Noを入力して検索してください。</td>
                 </tr>
                 </tbody>
             </table>
@@ -327,7 +328,14 @@
         }
 
         const payload = rows.map((row) => ({
-            id: Number(row.dataset.detailId),
+            id: toNullableNumber(row.dataset.detailId),
+            slipId: toNullableNumber(row.dataset.slipId),
+            code: row.dataset.code || "",
+            name: row.dataset.name || "",
+            price: toNullableNumber(row.dataset.price),
+            taxPrice: toNullableNumber(row.dataset.taxPrice),
+            credit: row.dataset.credit || "",
+            note: row.dataset.note || "",
             returned: row.querySelector("input[type='checkbox']").checked,
             plannedLabel: row.querySelector("[data-planned-label]").value
         }));
@@ -364,7 +372,7 @@
 
     function renderRows(details, mediaEntries) {
         if (!details.length) {
-            resultTable.innerHTML = '<tr id="emptyRow"><td colspan="8" class="empty">検索結果がありません。</td></tr>';
+            resultTable.innerHTML = '<tr id="emptyRow"><td colspan="9" class="empty">検索結果がありません。</td></tr>';
             return;
         }
 
@@ -373,7 +381,14 @@
         resultTable.innerHTML = details.map((detail) => {
             const returned = Boolean(detail.returned);
             return `
-                <tr data-detail-id="${escapeHtml(String(detail.id ?? ""))}">
+                <tr data-detail-id="${escapeHtml(String(detail.id ?? ""))}"
+                    data-slip-id="${escapeHtml(String(detail.slipId ?? ""))}"
+                    data-code="${escapeHtml(detail.code ?? "")}"
+                    data-name="${escapeHtml(detail.name ?? "")}"
+                    data-price="${escapeHtml(String(detail.price ?? ""))}"
+                    data-tax-price="${escapeHtml(String(detail.taxPrice ?? ""))}"
+                    data-credit="${escapeHtml(detail.credit ?? "")}"
+                    data-note="${escapeHtml(detail.note ?? "")}">
                     <td class="checkbox-cell"><input type="checkbox" ${returned ? "checked" : ""}></td>
                     <td>${escapeHtml(detail.code ?? "")}</td>
                     <td>${escapeHtml(detail.name ?? "")}</td>
@@ -388,9 +403,14 @@
                             ${optionsHtml}
                         </select>
                     </td>
+                    <td><button type="button" class="secondary" data-copy-detail>コピー</button></td>
                 </tr>
             `;
         }).join("");
+
+        Array.from(document.querySelectorAll("#resultTable tr[data-detail-id], #resultTable tr[data-slip-id]")).forEach((row, index) => {
+            row.querySelector("[data-copy-detail]").addEventListener("click", () => copyDetailRow(row, mediaEntries));
+        });
 
         Array.from(document.querySelectorAll("[data-planned-label]")).forEach((select, index) => {
             const detail = details[index];
@@ -463,6 +483,27 @@
 
     function buildPlannedLabel(index) {
         return String.fromCharCode(65 + index);
+    }
+
+    function copyDetailRow(sourceRow, mediaEntries) {
+        const rows = Array.from(document.querySelectorAll("#resultTable tr[data-slip-id]"));
+        const clone = sourceRow.cloneNode(true);
+        clone.dataset.detailId = "";
+        clone.querySelector("input[type='checkbox']").checked = sourceRow.querySelector("input[type='checkbox']").checked;
+        clone.querySelector("[data-planned-label]").innerHTML = renderPlannedOptions(mediaEntries);
+        clone.querySelector("[data-planned-label]").value = sourceRow.querySelector("[data-planned-label]").value;
+        clone.querySelector("[data-copy-detail]").addEventListener("click", () => copyDetailRow(clone, mediaEntries));
+        sourceRow.insertAdjacentElement("afterend", clone);
+        setMessage("明細をコピーしました。掲載予定を切り替えて更新してください。", "success");
+    }
+
+    function toNullableNumber(value) {
+        const normalized = String(value ?? "").trim();
+        if (!normalized) {
+            return null;
+        }
+        const parsed = Number(normalized);
+        return Number.isFinite(parsed) ? parsed : null;
     }
 
     function escapeHtml(value) {

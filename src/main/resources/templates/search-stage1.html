@@ -280,12 +280,11 @@
                     <th>税込価格</th>
                     <th>クレジット</th>
                     <th>明細備考</th>
-                    <th>コピー</th>
                 </tr>
                 </thead>
                 <tbody id="resultTable">
                 <tr id="emptyRow">
-                    <td class="empty" colspan="7">品番を入力して Enter を押すと、ここに明細が追加されます。</td>
+                    <td class="empty" colspan="6">品番を入力して Enter を押すと、ここに明細が追加されます。</td>
                 </tr>
                 </tbody>
             </table>
@@ -495,7 +494,7 @@
         if (details.length) {
             details.forEach((detail) => appendExistingDetailRow(detail));
         } else {
-            resultTable.innerHTML = `<tr id="${emptyRowId}"><td class="empty" colspan="7">品番を入力して Enter を押すと、ここに明細が追加されます。</td></tr>`;
+            resultTable.innerHTML = `<tr id="${emptyRowId}"><td class="empty" colspan="6">品番を入力して Enter を押すと、ここに明細が追加されます。</td></tr>`;
         }
     }
 
@@ -524,9 +523,7 @@
             <td><input type="text" data-detail-tax-price value="${escapeHtml(String(values.taxPrice ?? ""))}"></td>
             <td><input type="text" data-detail-credit value="${escapeHtml(values.credit ?? "")}"></td>
             <td><input type="text" data-detail-note value="${escapeHtml(values.note ?? "")}"></td>
-            <td><button type="button" class="secondary" data-copy-detail>コピー</button></td>
         `;
-        row.querySelector("[data-copy-detail]").addEventListener("click", () => copyDetailRow(row));
         resultTable.appendChild(row);
     }
     async function saveSlip() {
@@ -709,23 +706,6 @@
 
     function buildPlannedLabel(index) {
         return String.fromCharCode(65 + index);
-    }
-
-    function copyDetailRow(sourceRow) {
-        if (document.querySelectorAll("#resultTable tr[data-detail-row='true']").length >= maxRows) {
-            setMessage("明細は最大10行まで追加できます。", "error");
-            return;
-        }
-
-        appendDetailRow({
-            code: sourceRow.querySelector("[data-detail-code]").value,
-            name: sourceRow.querySelector("[data-detail-name]").value,
-            price: sourceRow.querySelector("[data-detail-price]").value,
-            taxPrice: sourceRow.querySelector("[data-detail-tax-price]").value,
-            credit: sourceRow.querySelector("[data-detail-credit]").value,
-            note: sourceRow.querySelector("[data-detail-note]").value
-        });
-        setMessage("明細をコピーしました。", "success");
     }
 
     function toNullableInt(value) {
