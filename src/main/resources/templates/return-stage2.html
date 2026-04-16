@@ -189,11 +189,29 @@
         }
         .modal-card h2 { margin: 0 0 12px; }
         .modal-card p { margin: 0 0 18px; line-height: 1.7; }
-        .modal-actions { display: flex; justify-content: flex-end; }
+        .modal-actions { display: flex; justify-content: flex-end; gap: 10px; }
+        .undo-banner {
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 12px 14px;
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            background: #fff7ef;
+            color: var(--text);
+            font-size: 14px;
+        }
+        .undo-banner.is-visible { display: flex; }
+        .undo-banner button {
+            padding: 8px 14px;
+            border-radius: 12px;
+        }
         @media (max-width: 700px) {
             .search-row { align-items: stretch; }
             .field { min-width: 100%; }
             .search-row button { width: 100%; }
+            .undo-banner { flex-direction: column; align-items: stretch; }
         }
     </style>
 </head>
@@ -226,6 +244,10 @@
     </section>
 
     <section class="panel">
+        <div id="undoBanner" class="undo-banner" aria-live="polite">
+            <span id="undoMessage">削除しました。</span>
+            <button type="button" id="undoDeleteButton" class="secondary">元にもどす</button>
+        </div>
         <div class="table-wrap">
             <table>
                 <thead>
@@ -239,11 +261,12 @@
                     <th>状態</th>
                     <th>掲載予定</th>
                     <th>コピー</th>
+                    <th>削除</th>
                 </tr>
                 </thead>
                 <tbody id="resultTable">
                 <tr id="emptyRow">
-                    <td colspan="9" class="empty">伝票Noを入力して検索してください。</td>
+                    <td colspan="10" class="empty">伝票Noを入力して検索してください。</td>
                 </tr>
                 </tbody>
             </table>
@@ -262,6 +285,16 @@
         </div>
     </div>
 </div>
+<div id="deleteModal" class="modal" aria-hidden="true">
+    <div class="modal-card">
+        <h2>削除確認</h2>
+        <p>本当に削除しますか？</p>
+        <div class="modal-actions">
+            <button type="button" id="cancelDeleteButton" class="secondary">いいえ</button>
+            <button type="button" id="confirmDeleteButton" class="primary">はい</button>
+        </div>
+    </div>
+</div>
 
 <script>
     const slipNoInput = document.getElementById("slipNo");
@@ -271,10 +304,23 @@
     const message = document.getElementById("message");
     const updateModal = document.getElementById("updateModal");
     const closeModalButton = document.getElementById("closeModalButton");
+    const deleteModal = document.getElementById("deleteModal");
+    const cancelDeleteButton = document.getElementById("cancelDeleteButton");
+    const confirmDeleteButton = document.getElementById("confirmDeleteButton");
+    const undoBanner = document.getElementById("undoBanner");
+    const undoMessage = document.getElementById("undoMessage");
+    const undoDeleteButton = document.getElementById("undoDeleteButton");
+    let pendingDeleteRow = null;
+    let lastDeletedRow = null;
+    let lastDeletedNextSibling = null;
+    let lastDeletedParent = null;
 
     searchButton.addEventListener("click", searchSlip);
     updateButton.addEventListener("click", updateReturn);
     closeModalButton.addEventListener("click", closeUpdateModal);
+    cancelDeleteButton.addEventListener("click", closeDeleteModal);
+    confirmDeleteButton.addEventListener("click", confirmDeleteRowRemoval);
+    undoDeleteButton.addEventListener("click", undoDeleteRow);
     slipNoInput.addEventListener("keydown", (event) => {
         if (event.key === "Enter") {
             event.preventDefault();
@@ -284,6 +330,11 @@
     updateModal.addEventListener("click", (event) => {
         if (event.target === updateModal) {
             closeUpdateModal();
+        }
+    });
+    deleteModal.addEventListener("click", (event) => {
+        if (event.target === deleteModal) {
+            closeDeleteModal();
         }
     });
 
@@ -372,7 +423,7 @@
 
     function renderRows(details, mediaEntries) {
         if (!details.length) {
-            resultTable.innerHTML = '<tr id="emptyRow"><td colspan="9" class="empty">検索結果がありません。</td></tr>';
+            resultTable.innerHTML = '<tr id="emptyRow"><td colspan="10" class="empty">検索結果がありません。</td></tr>';
             return;
         }
 
@@ -388,7 +439,8 @@
                     data-price="${escapeHtml(String(detail.price ?? ""))}"
                     data-tax-price="${escapeHtml(String(detail.taxPrice ?? ""))}"
                     data-credit="${escapeHtml(detail.credit ?? "")}"
-                    data-note="${escapeHtml(detail.note ?? "")}">
+                    data-note="${escapeHtml(detail.note ?? "")}"
+                    data-is-copy="false">
                     <td class="checkbox-cell"><input type="checkbox" ${returned ? "checked" : ""}></td>
                     <td>${escapeHtml(detail.code ?? "")}</td>
                     <td>${escapeHtml(detail.name ?? "")}</td>
@@ -404,12 +456,14 @@
                         </select>
                     </td>
                     <td><button type="button" class="secondary" data-copy-detail>コピー</button></td>
+                    <td><button type="button" class="secondary" data-remove-detail>削除</button></td>
                 </tr>
             `;
         }).join("");
 
         Array.from(document.querySelectorAll("#resultTable tr[data-detail-id], #resultTable tr[data-slip-id]")).forEach((row, index) => {
             row.querySelector("[data-copy-detail]").addEventListener("click", () => copyDetailRow(row, mediaEntries));
+            row.querySelector("[data-remove-detail]").addEventListener("click", () => removeDetailRow(row));
         });
 
         Array.from(document.querySelectorAll("[data-planned-label]")).forEach((select, index) => {
@@ -489,12 +543,80 @@
         const rows = Array.from(document.querySelectorAll("#resultTable tr[data-slip-id]"));
         const clone = sourceRow.cloneNode(true);
         clone.dataset.detailId = "";
+        clone.dataset.isCopy = "true";
         clone.querySelector("input[type='checkbox']").checked = sourceRow.querySelector("input[type='checkbox']").checked;
         clone.querySelector("[data-planned-label]").innerHTML = renderPlannedOptions(mediaEntries);
         clone.querySelector("[data-planned-label]").value = sourceRow.querySelector("[data-planned-label]").value;
         clone.querySelector("[data-copy-detail]").addEventListener("click", () => copyDetailRow(clone, mediaEntries));
+        clone.querySelector("[data-remove-detail]").addEventListener("click", () => removeDetailRow(clone));
         sourceRow.insertAdjacentElement("afterend", clone);
         setMessage("明細をコピーしました。掲載予定を切り替えて更新してください。", "success");
+    }
+
+    function removeDetailRow(row) {
+        if (row.dataset.isCopy !== "true") {
+            setMessage("保存済みの行はここでは削除できません。誤ってコピーした行だけ削除できます。", "error");
+            return;
+        }
+
+        pendingDeleteRow = row;
+        openDeleteModal();
+    }
+
+    function openDeleteModal() {
+        deleteModal.classList.add("is-open");
+        deleteModal.setAttribute("aria-hidden", "false");
+    }
+
+    function closeDeleteModal() {
+        deleteModal.classList.remove("is-open");
+        deleteModal.setAttribute("aria-hidden", "true");
+        pendingDeleteRow = null;
+    }
+
+    function confirmDeleteRowRemoval() {
+        if (!pendingDeleteRow) {
+            closeDeleteModal();
+            return;
+        }
+
+        lastDeletedRow = pendingDeleteRow;
+        lastDeletedNextSibling = pendingDeleteRow.nextElementSibling;
+        lastDeletedParent = pendingDeleteRow.parentElement;
+        pendingDeleteRow.remove();
+        closeDeleteModal();
+
+        if (!document.querySelector("#resultTable tr[data-slip-id]")) {
+            resultTable.innerHTML = '<tr id="emptyRow"><td colspan="10" class="empty">検索結果がありません。</td></tr>';
+        }
+
+        undoMessage.textContent = "削除しました。";
+        undoBanner.classList.add("is-visible");
+        setMessage("コピーした行を削除しました。", "success");
+    }
+
+    function undoDeleteRow() {
+        if (!lastDeletedRow || !lastDeletedParent) {
+            undoBanner.classList.remove("is-visible");
+            return;
+        }
+
+        const emptyRow = document.getElementById("emptyRow");
+        if (emptyRow) {
+            emptyRow.remove();
+        }
+
+        if (lastDeletedNextSibling && lastDeletedNextSibling.parentElement === lastDeletedParent) {
+            lastDeletedParent.insertBefore(lastDeletedRow, lastDeletedNextSibling);
+        } else {
+            lastDeletedParent.appendChild(lastDeletedRow);
+        }
+
+        undoBanner.classList.remove("is-visible");
+        setMessage("削除した行を元にもどしました。", "success");
+        lastDeletedRow = null;
+        lastDeletedNextSibling = null;
+        lastDeletedParent = null;
     }
 
     function toNullableNumber(value) {
