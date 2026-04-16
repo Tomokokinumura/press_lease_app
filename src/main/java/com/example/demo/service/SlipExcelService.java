@@ -9,6 +9,9 @@ import java.util.Collections;
 import java.util.List;
 
 import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.CreationHelper;
+import org.apache.poi.ss.usermodel.Font;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -19,6 +22,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import com.example.demo.dto.ExcelDetailRowDto;
 import com.example.demo.dto.ExcelExportRequest;
+import com.example.demo.dto.SlipDetailDto;
 import com.example.demo.entity.MasterSetting;
 import com.example.demo.entity.Slip;
 import com.example.demo.entity.SlipDetail;
@@ -90,6 +94,25 @@ public class SlipExcelService {
         response.flushBuffer();
     }
 
+    public void exportRawSlip(String slipNo, HttpServletResponse response) throws IOException {
+        Slip slip = slipMapper.findBySlipNo(slipNo);
+        if (slip == null) {
+            throw new ResponseStatusException(NOT_FOUND, "Slip not found: " + slipNo);
+        }
+
+        List<SlipDetailDto> rows = slipDetailMapper.findSlipRowsBySlipNo(slipNo).stream().toList();
+        rows = rows.isEmpty() ? rows : enrichRowsWithMedia(rows);
+
+        byte[] bytes = renderRawWorkbook(rows);
+
+        response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        response.setHeader(
+                HttpHeaders.CONTENT_DISPOSITION,
+                "attachment; filename=slip_raw_" + slipNo + ".xlsx");
+        response.getOutputStream().write(bytes);
+        response.flushBuffer();
+    }
+
     public byte[] exportRequest(ExcelExportRequest request) throws IOException {
         MasterSetting masterSetting = masterSettingMapper.find();
         return renderWorkbook(
@@ -133,6 +156,49 @@ public class SlipExcelService {
                 workbook.write(outputStream);
                 return outputStream.toByteArray();
             }
+        }
+    }
+
+    private byte[] renderRawWorkbook(List<SlipDetailDto> rows) throws IOException {
+        try (Workbook workbook = new XSSFWorkbook(); ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+            Sheet sheet = workbook.createSheet("slip-raw");
+            CellStyle headerStyle = createHeaderStyle(workbook);
+            CellStyle dateStyle = createDateStyle(workbook);
+
+            String[] headers = {`r`n                    "Status", "Slip No", "Staff Name", "Code", "Title", "Price", "Tax Price",`r`n                    "Credit", "Media Name", "Project Name", "Release Date", "Loan Date", "Return Date", "Note"`r`n            };
+
+            Row headerRow = sheet.createRow(0);
+            for (int i = 0; i < headers.length; i++) {
+                Cell cell = headerRow.createCell(i);
+                cell.setCellValue(headers[i]);
+                cell.setCellStyle(headerStyle);
+            }
+
+            for (int i = 0; i < rows.size(); i++) {
+                SlipDetailDto rowData = rows.get(i);
+                Row row = sheet.createRow(i + 1);
+                setTextCell(row, 0, Boolean.TRUE.equals(rowData.getReturned()) ? "Returned" : "");
+                setTextCell(row, 1, rowData.getSlipNo());
+                setTextCell(row, 2, rowData.getStaffName());
+                setTextCell(row, 3, rowData.getCode());
+                setTextCell(row, 4, rowData.getName());
+                setNumberCell(row, 5, rowData.getPrice());
+                setNumberCell(row, 6, rowData.getTaxPrice());
+                setTextCell(row, 7, rowData.getCredit());
+                setTextCell(row, 8, rowData.getMediaName());
+                setTextCell(row, 9, rowData.getProjectName());
+                setDateCell(row, 10, rowData.getReleaseDate(), dateStyle);
+                setDateCell(row, 11, rowData.getLoanDate(), dateStyle);
+                setDateCell(row, 12, rowData.getReturnDate(), dateStyle);
+                setTextCell(row, 13, rowData.getNote());
+            }
+
+            for (int i = 0; i < headers.length; i++) {
+                sheet.autoSizeColumn(i);
+            }
+
+            workbook.write(outputStream);
+            return outputStream.toByteArray();
         }
     }
 
@@ -186,6 +252,25 @@ public class SlipExcelService {
         setText(sheet, 45, 1, masterText);
     }
 
+    private List<SlipDetailDto> enrichRowsWithMedia(List<SlipDetailDto> rows) {
+        Integer slipId = rows.get(0).getSlipId();
+        if (slipId == null) {
+            return rows;
+        }
+        List<SlipMedia> mediaEntries = slipMediaMapper.findBySlipId(slipId);
+        if (mediaEntries == null || mediaEntries.isEmpty()) {
+            return rows;
+        }
+        for (int i = 0; i < rows.size() && i < mediaEntries.size(); i++) {
+            SlipMedia media = mediaEntries.get(i);
+            SlipDetailDto row = rows.get(i);
+            row.setMediaName(media.getMediaName());
+            row.setProjectName(media.getProjectName());
+            row.setReleaseDate(media.getReleaseDate());
+        }
+        return rows;
+    }
+
     private ExcelDetailRowDto toExcelDetailRow(SlipDetail detail) {
         ExcelDetailRowDto row = new ExcelDetailRowDto();
         row.setCredit(detail.getCredit());
@@ -216,6 +301,45 @@ public class SlipExcelService {
     private void setNumber(Sheet sheet, int rowIndex, int cellIndex, int value) {
         Cell cell = getOrCreateCell(sheet, rowIndex, cellIndex);
         cell.setCellValue(value);
+    }
+
+    private CellStyle createHeaderStyle(Workbook workbook) {
+        Font font = workbook.createFont();
+        font.setBold(true);
+        CellStyle style = workbook.createCellStyle();
+        style.setFont(font);
+        return style;
+    }
+
+    private CellStyle createDateStyle(Workbook workbook) {
+        CreationHelper creationHelper = workbook.getCreationHelper();
+        CellStyle style = workbook.createCellStyle();
+        style.setDataFormat(creationHelper.createDataFormat().getFormat("yyyy/mm/dd"));
+        return style;
+    }
+
+    private void setTextCell(Row row, int cellIndex, String value) {
+        Cell cell = row.createCell(cellIndex);
+        cell.setCellValue(value == null ? "" : value);
+    }
+
+    private void setNumberCell(Row row, int cellIndex, Integer value) {
+        Cell cell = row.createCell(cellIndex);
+        if (value == null) {
+            cell.setBlank();
+        } else {
+            cell.setCellValue(value);
+        }
+    }
+
+    private void setDateCell(Row row, int cellIndex, LocalDate value, CellStyle dateStyle) {
+        Cell cell = row.createCell(cellIndex);
+        if (value == null) {
+            cell.setBlank();
+            return;
+        }
+        cell.setCellValue(java.sql.Date.valueOf(value));
+        cell.setCellStyle(dateStyle);
     }
 
     private Cell getOrCreateCell(Sheet sheet, int rowIndex, int cellIndex) {

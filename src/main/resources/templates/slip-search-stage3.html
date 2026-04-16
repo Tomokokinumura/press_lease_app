@@ -377,7 +377,7 @@
             setMessage("Excel出力する伝票Noを入力してください。", "error");
             return;
         }
-        window.location.href = `/excel/export/${encodeURIComponent(slipNo)}`;
+        window.location.href = `/excel/export/raw/${encodeURIComponent(slipNo)}`;
     }
 
     async function deleteSlip() {
