@@ -239,6 +239,7 @@
                     <th>価格</th>
                     <th>税込</th>
                     <th>クレジット</th>
+                    <th>氏名</th>
                     <th>媒体名</th>
                     <th>企画名</th>
                     <th>発売日</th>
@@ -250,7 +251,7 @@
                 </thead>
                 <tbody id="resultTable">
                 <tr id="emptyRow">
-                    <td colspan="14" class="empty">伝票Noまたは品番を入力して検索してください。</td>
+                    <td colspan="15" class="empty">伝票Noまたは品番を入力して検索してください。</td>
                 </tr>
                 </tbody>
             </table>
@@ -431,7 +432,7 @@
     function renderRows(rows) {
         if (!rows.length) {
             resultMeta.textContent = "検索結果はまだありません。";
-            resultTable.innerHTML = '<tr id="emptyRow"><td colspan="14" class="empty">検索結果がありません。</td></tr>';
+            resultTable.innerHTML = '<tr id="emptyRow"><td colspan="15" class="empty">検索結果がありません。</td></tr>';
             return;
         }
 
@@ -451,6 +452,7 @@
                 <td class="text-cell">${escapeHtml(formatNumber(row.price))}</td>
                 <td class="text-cell">${escapeHtml(formatNumber(row.taxPrice))}</td>
                 <td class="text-cell">${escapeHtml(row.credit ?? "")}</td>
+                <td class="text-cell">${escapeHtml(row.staffName ?? "")}</td>
                 <td class="text-cell">${escapeHtml(row.mediaName ?? "")}</td>
                 <td class="text-cell">${escapeHtml(row.projectName ?? "")}</td>
                 <td class="text-cell">${escapeHtml(formatDate(row.releaseDate))}</td>
