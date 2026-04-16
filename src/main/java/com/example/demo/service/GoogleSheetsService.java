@@ -2,11 +2,14 @@ package com.example.demo.service;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.ByteArrayInputStream;
 import java.math.BigDecimal;
 import java.security.GeneralSecurityException;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.Base64;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
@@ -34,14 +37,20 @@ public class GoogleSheetsService {
     private final String spreadsheetId;
     private final String range;
     private final Resource credentialsResource;
+    private final String credentialsJson;
+    private final String credentialsBase64;
 
     public GoogleSheetsService(
             @Value("${google.sheets.spreadsheet-id}") String spreadsheetId,
             @Value("${google.sheets.range}") String range,
-            @Value("${google.sheets.credentials-location}") Resource credentialsResource) {
+            @Value("${google.sheets.credentials-location}") Resource credentialsResource,
+            @Value("${google.sheets.credentials-json:}") String credentialsJson,
+            @Value("${google.sheets.credentials-base64:}") String credentialsBase64) {
         this.spreadsheetId = spreadsheetId;
         this.range = range;
         this.credentialsResource = credentialsResource;
+        this.credentialsJson = credentialsJson;
+        this.credentialsBase64 = credentialsBase64;
     }
 
     public Optional<SheetSearchResponse> findByCode(String code) throws IOException, GeneralSecurityException {
@@ -64,13 +73,9 @@ public class GoogleSheetsService {
     }
 
     private Sheets createSheetsService() throws IOException, GeneralSecurityException {
-        if (!credentialsResource.exists()) {
-            throw new IOException("Google Sheets credentials file was not found: " + credentialsResource);
-        }
-
         NetHttpTransport httpTransport = GoogleNetHttpTransport.newTrustedTransport();
         GoogleCredential credential;
-        try (InputStream inputStream = credentialsResource.getInputStream()) {
+        try (InputStream inputStream = openCredentialsStream()) {
             credential = GoogleCredential.fromStream(inputStream, httpTransport, JSON_FACTORY)
                     .createScoped(List.of(SheetsScopes.SPREADSHEETS_READONLY));
         }
@@ -78,6 +83,20 @@ public class GoogleSheetsService {
         return new Sheets.Builder(httpTransport, JSON_FACTORY, credential)
                 .setApplicationName(APPLICATION_NAME)
                 .build();
+    }
+
+    private InputStream openCredentialsStream() throws IOException {
+        if (hasText(credentialsJson)) {
+            return new ByteArrayInputStream(credentialsJson.getBytes(StandardCharsets.UTF_8));
+        }
+        if (hasText(credentialsBase64)) {
+            byte[] decoded = Base64.getDecoder().decode(credentialsBase64);
+            return new ByteArrayInputStream(decoded);
+        }
+        if (!credentialsResource.exists()) {
+            throw new IOException("Google Sheets credentials were not configured.");
+        }
+        return credentialsResource.getInputStream();
     }
 
     private SheetSearchResponse toResponse(List<Object> row) {
@@ -115,5 +134,9 @@ public class GoogleSheetsService {
             text = text.substring(0, text.length() - 2);
         }
         return text.replaceAll("\\s+", "");
+    }
+
+    private boolean hasText(String value) {
+        return value != null && !value.trim().isEmpty();
     }
 }

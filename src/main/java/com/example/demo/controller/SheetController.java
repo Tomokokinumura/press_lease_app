@@ -37,9 +37,10 @@ public class SheetController {
         } catch (ResponseStatusException ex) {
             throw ex;
         } catch (Exception ex) {
+            ex.printStackTrace();
             throw new ResponseStatusException(
                     HttpStatus.SERVICE_UNAVAILABLE,
-                    "Search service is temporarily unavailable.",
+                    ex.getMessage(),
                     ex);
         }
     }
