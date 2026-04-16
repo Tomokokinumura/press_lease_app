@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.example.demo.dto.SlipDetailDto;
+import com.example.demo.dto.SlipEditResponse;
 import com.example.demo.entity.SlipDetail;
 import com.example.demo.mapper.SlipDetailMapper;
 import com.example.demo.service.SlipService;
@@ -28,8 +28,8 @@ public class ReturnApiController {
     }
 
     @GetMapping
-    public List<SlipDetailDto> getSlipDetails(@RequestParam String slipNo) {
-        return slipService.findBySlipNo(slipNo == null ? "" : slipNo.trim());
+    public SlipEditResponse getSlipDetails(@RequestParam String slipNo) {
+        return slipService.loadSlipForEdit(slipNo == null ? "" : slipNo.trim());
     }
 
     @PostMapping("/update")

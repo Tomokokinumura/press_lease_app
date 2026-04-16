@@ -98,7 +98,7 @@
         .search-row { display: flex; gap: 12px; align-items: end; flex-wrap: wrap; }
         .field { display: grid; gap: 8px; min-width: min(320px, 100%); }
         label { font-size: 14px; font-weight: 700; }
-        input, button { font: inherit; }
+        input, button, select { font: inherit; }
         input[type="text"] {
             border: 1px solid var(--line);
             border-radius: 14px;
@@ -106,7 +106,20 @@
             background: #fff;
             color: var(--text);
         }
+        select {
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            padding: 10px 12px;
+            background: #fff;
+            color: var(--text);
+            min-width: 220px;
+        }
         input[type="text"]:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(184, 92, 56, 0.12);
+        }
+        select:focus {
             outline: none;
             border-color: var(--accent);
             box-shadow: 0 0 0 3px rgba(184, 92, 56, 0.12);
@@ -285,19 +298,21 @@
 
         try {
             const response = await fetch(`/api/return?slipNo=${encodeURIComponent(slipNo)}`);
-            const data = await response.json().catch(() => []);
+            const data = await response.json().catch(() => ({}));
             if (!response.ok) {
                 throw new Error("返却情報の取得に失敗しました。");
             }
 
-            renderRows(Array.isArray(data) ? data : []);
-            if (data.length === 0) {
+            const details = Array.isArray(data.details) ? data.details : [];
+            const mediaEntries = Array.isArray(data.mediaEntries) ? data.mediaEntries : [];
+            renderRows(details, mediaEntries);
+            if (details.length === 0) {
                 setMessage("該当する明細が見つかりませんでした。", "error");
             } else {
-                setMessage(`${data.length}件の明細を表示しました。`, "success");
+                setMessage(`${details.length}件の明細を表示しました。`, "success");
             }
         } catch (error) {
-            renderRows([]);
+            renderRows([], []);
             setMessage(error.message || "返却情報の取得に失敗しました。", "error");
         } finally {
             searchButton.disabled = false;
@@ -313,7 +328,8 @@
 
         const payload = rows.map((row) => ({
             id: Number(row.dataset.detailId),
-            returned: row.querySelector("input[type='checkbox']").checked
+            returned: row.querySelector("input[type='checkbox']").checked,
+            plannedLabel: row.querySelector("[data-planned-label]").value
         }));
 
         updateButton.disabled = true;
@@ -346,11 +362,13 @@
         }
     }
 
-    function renderRows(details) {
+    function renderRows(details, mediaEntries) {
         if (!details.length) {
             resultTable.innerHTML = '<tr id="emptyRow"><td colspan="8" class="empty">検索結果がありません。</td></tr>';
             return;
         }
+
+        const optionsHtml = renderPlannedOptions(mediaEntries);
 
         resultTable.innerHTML = details.map((detail) => {
             const returned = Boolean(detail.returned);
@@ -365,10 +383,22 @@
                     <td data-status>${returned
                         ? '<span class="status-badge is-returned">返却済み</span>'
                         : '<span class="status-badge">未返却</span>'}</td>
-                    <td>${escapeHtml(formatPlannedPublication(detail))}</td>
+                    <td>
+                        <select data-planned-label>
+                            ${optionsHtml}
+                        </select>
+                    </td>
                 </tr>
             `;
         }).join("");
+
+        Array.from(document.querySelectorAll("[data-planned-label]")).forEach((select, index) => {
+            const detail = details[index];
+            const candidate = resolveInitialPlannedLabel(detail, mediaEntries, index);
+            if (candidate) {
+                select.value = candidate;
+            }
+        });
     }
 
     function formatNumber(value) {
@@ -398,18 +428,41 @@
         updateModal.setAttribute("aria-hidden", "true");
     }
 
-    function formatPlannedPublication(detail) {
+    function renderPlannedOptions(mediaEntries) {
+        const options = ['<option value="">未選択</option>'];
+        collectPlannedCandidates(mediaEntries).forEach((candidate) => {
+            options.push(`<option value="${escapeHtml(candidate.label)}">${escapeHtml(candidate.text)}</option>`);
+        });
+        return options.join("");
+    }
+
+    function collectPlannedCandidates(mediaEntries) {
+        return mediaEntries.map((entry, index) => {
+            const label = buildPlannedLabel(index);
+            const mediaName = String(entry.mediaName ?? "").trim();
+            const projectName = String(entry.projectName ?? "").trim();
+            const summary = [mediaName, projectName].filter(Boolean).join(" / ");
+            return {
+                label,
+                text: summary ? `${label}: ${summary}` : `${label}: 媒体情報未入力`
+            };
+        });
+    }
+
+    function resolveInitialPlannedLabel(detail, mediaEntries, index) {
         const label = String(detail.plannedLabel ?? "").trim();
-        const mediaName = String(detail.mediaName ?? "").trim();
-        const projectName = String(detail.projectName ?? "").trim();
-        const summary = [mediaName, projectName].filter(Boolean).join(" / ");
-        if (label && summary) {
-            return `${label}: ${summary}`;
-        }
         if (label) {
             return label;
         }
-        return summary;
+        const mediaEntry = mediaEntries[index];
+        if (!mediaEntry) {
+            return "";
+        }
+        return buildPlannedLabel(index);
+    }
+
+    function buildPlannedLabel(index) {
+        return String.fromCharCode(65 + index);
     }
 
     function escapeHtml(value) {

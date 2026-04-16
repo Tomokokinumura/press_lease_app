@@ -54,7 +54,8 @@
     <update id="updateReturn" parameterType="com.example.demo.entity.SlipDetail">
         UPDATE slip_detail
         SET returned = #{returned},
-            returned_date = #{returnedDate}
+            returned_date = #{returnedDate},
+            planned_label = #{plannedLabel}
         WHERE id = #{id}
     </update>
 

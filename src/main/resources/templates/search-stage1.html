@@ -279,14 +279,13 @@
                     <th>価格</th>
                     <th>税込価格</th>
                     <th>クレジット</th>
-                    <th>掲載予定</th>
                     <th>明細備考</th>
                     <th>コピー</th>
                 </tr>
                 </thead>
                 <tbody id="resultTable">
                 <tr id="emptyRow">
-                    <td class="empty" colspan="8">品番を入力して Enter を押すと、ここに明細が追加されます。</td>
+                    <td class="empty" colspan="7">品番を入力して Enter を押すと、ここに明細が追加されます。</td>
                 </tr>
                 </tbody>
             </table>
@@ -419,10 +418,6 @@
             <button type="button" class="remove-btn" data-remove-media>行削除</button>
         `;
 
-        row.querySelectorAll("[data-media-name], [data-project-name], [data-release-date], [data-note]").forEach((input) => {
-            input.addEventListener("input", refreshPlannedOptions);
-            input.addEventListener("change", refreshPlannedOptions);
-        });
         row.querySelector("[data-remove-media]").addEventListener("click", () => {
             row.remove();
             if (mediaRows.querySelectorAll("[data-media-row='true']").length === 0) {
@@ -430,12 +425,10 @@
                 return;
             }
             refreshMediaRowLabels();
-            refreshPlannedOptions();
         });
 
         mediaRows.appendChild(row);
         refreshMediaRowLabels();
-        refreshPlannedOptions();
     }
 
     function appendResultRow(data) {
@@ -448,7 +441,6 @@
             price: String(basePrice),
             taxPrice: taxIncludedDisplay,
             credit: "",
-            plannedLabel: getDefaultPlannedLabel(),
             note: ""
         });
     }
@@ -503,7 +495,7 @@
         if (details.length) {
             details.forEach((detail) => appendExistingDetailRow(detail));
         } else {
-            resultTable.innerHTML = `<tr id="${emptyRowId}"><td class="empty" colspan="8">品番を入力して Enter を押すと、ここに明細が追加されます。</td></tr>`;
+            resultTable.innerHTML = `<tr id="${emptyRowId}"><td class="empty" colspan="7">品番を入力して Enter を押すと、ここに明細が追加されます。</td></tr>`;
         }
     }
 
@@ -514,7 +506,6 @@
             price: detail.price ?? "",
             taxPrice: detail.taxPrice ?? "",
             credit: detail.credit ?? "",
-            plannedLabel: detail.plannedLabel ?? "",
             note: detail.note ?? ""
         });
     }
@@ -532,11 +523,6 @@
             <td><input type="text" data-detail-price value="${escapeHtml(String(values.price ?? ""))}"></td>
             <td><input type="text" data-detail-tax-price value="${escapeHtml(String(values.taxPrice ?? ""))}"></td>
             <td><input type="text" data-detail-credit value="${escapeHtml(values.credit ?? "")}"></td>
-            <td>
-                <select data-detail-planned-label>
-                    ${renderPlannedOptions(values.plannedLabel ?? getDefaultPlannedLabel())}
-                </select>
-            </td>
             <td><input type="text" data-detail-note value="${escapeHtml(values.note ?? "")}"></td>
             <td><button type="button" class="secondary" data-copy-detail>コピー</button></td>
         `;
@@ -670,7 +656,6 @@
                 price: toNullableInt(row.querySelector("[data-detail-price]").value),
                 taxPrice: toNullableInt(row.querySelector("[data-detail-tax-price]").value),
                 credit: normalizeText(row.querySelector("[data-detail-credit]").value),
-                plannedLabel: normalizeText(row.querySelector("[data-detail-planned-label]").value),
                 note: normalizeText(row.querySelector("[data-detail-note]").value)
             };
         });
@@ -684,7 +669,6 @@
                 name: normalizeText(row.querySelector("[data-detail-name]").value),
                 price: toNullableInt(row.querySelector("[data-detail-price]").value),
                 taxPrice: toNullableInt(row.querySelector("[data-detail-tax-price]").value),
-                plannedLabel: normalizeText(row.querySelector("[data-detail-planned-label]").value),
                 mediaName: "",
                 releaseDate: null,
                 note: normalizeText(row.querySelector("[data-detail-note]").value)
@@ -723,47 +707,6 @@
         });
     }
 
-    function refreshPlannedOptions() {
-        const selects = document.querySelectorAll("[data-detail-planned-label]");
-        selects.forEach((select) => {
-            const selectedValue = select.value;
-            select.innerHTML = renderPlannedOptions(selectedValue);
-            if (!select.value) {
-                const fallback = selectedValue || getDefaultPlannedLabel();
-                if (fallback) {
-                    select.value = fallback;
-                }
-            }
-        });
-    }
-
-    function renderPlannedOptions(selectedValue) {
-        const options = ['<option value="">未選択</option>'];
-        getPlannedCandidates().forEach((candidate) => {
-            const selected = candidate.label === selectedValue ? " selected" : "";
-            options.push(`<option value="${escapeHtml(candidate.label)}"${selected}>${escapeHtml(candidate.text)}</option>`);
-        });
-        return options.join("");
-    }
-
-    function getPlannedCandidates() {
-        return Array.from(document.querySelectorAll("[data-media-row='true']")).map((row, index) => {
-            const label = buildPlannedLabel(index);
-            const mediaName = normalizeText(row.querySelector("[data-media-name]").value);
-            const projectName = normalizeText(row.querySelector("[data-project-name]").value);
-            const summary = [mediaName, projectName].filter(Boolean).join(" / ");
-            return {
-                label,
-                text: summary ? `${label}: ${summary}` : `${label}: 媒体情報未入力`
-            };
-        });
-    }
-
-    function getDefaultPlannedLabel() {
-        const firstCandidate = getPlannedCandidates()[0];
-        return firstCandidate ? firstCandidate.label : "";
-    }
-
     function buildPlannedLabel(index) {
         return String.fromCharCode(65 + index);
     }
@@ -780,10 +723,9 @@
             price: sourceRow.querySelector("[data-detail-price]").value,
             taxPrice: sourceRow.querySelector("[data-detail-tax-price]").value,
             credit: sourceRow.querySelector("[data-detail-credit]").value,
-            plannedLabel: sourceRow.querySelector("[data-detail-planned-label]").value,
             note: sourceRow.querySelector("[data-detail-note]").value
         });
-        setMessage("明細をコピーしました。掲載予定を切り替えて保存できます。", "success");
+        setMessage("明細をコピーしました。", "success");
     }
 
     function toNullableInt(value) {
