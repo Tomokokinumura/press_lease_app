@@ -21,5 +21,7 @@ public interface SlipDetailMapper {
 
     void updateDetail(SlipDetailDto detail);
 
+    void deleteById(@Param("id") Integer id);
+
     void deleteBySlipId(@Param("slipId") Integer slipId);
 }

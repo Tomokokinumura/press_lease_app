@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.demo.dto.ReturnUpdateRequest;
 import com.example.demo.dto.SlipEditResponse;
 import com.example.demo.entity.SlipDetail;
 import com.example.demo.mapper.SlipDetailMapper;
@@ -33,11 +34,12 @@ public class ReturnApiController {
     }
 
     @PostMapping("/update")
-    public void updateReturn(@RequestBody List<SlipDetail> details) {
-        if (details == null) {
+    public void updateReturn(@RequestBody ReturnUpdateRequest request) {
+        if (request == null) {
             return;
         }
 
+        List<SlipDetail> details = request.getDetails();
         for (SlipDetail detail : details) {
             if (detail == null) {
                 continue;
@@ -54,6 +56,15 @@ public class ReturnApiController {
                 continue;
             }
             slipDetailMapper.updateReturn(detail);
+        }
+
+        if (request.getDeletedIds() != null) {
+            for (Integer deletedId : request.getDeletedIds()) {
+                if (deletedId == null) {
+                    continue;
+                }
+                slipDetailMapper.deleteById(deletedId);
+            }
         }
     }
 }

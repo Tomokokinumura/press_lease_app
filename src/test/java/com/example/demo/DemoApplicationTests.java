@@ -203,10 +203,13 @@ class DemoApplicationTests {
         mockMvc.perform(post("/api/return/update")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                [
-                                  {"id": 1, "returned": true},
-                                  {"id": 2, "returned": false}
-                                ]
+                                {
+                                  "details": [
+                                    {"id": 1, "returned": true},
+                                    {"id": 2, "returned": false}
+                                  ],
+                                  "deletedIds": [3]
+                                }
                                 """))
                 .andExpect(status().isOk());
 
@@ -221,6 +224,7 @@ class DemoApplicationTests {
         unreturnedDetail.setReturned(Boolean.FALSE);
         unreturnedDetail.setReturnedDate(null);
         verify(slipDetailMapper).updateReturn(ArgumentMatchers.refEq(unreturnedDetail));
+        verify(slipDetailMapper).deleteById(3);
     }
 
     @Test

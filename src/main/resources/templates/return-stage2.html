@@ -314,6 +314,7 @@
     let lastDeletedRow = null;
     let lastDeletedNextSibling = null;
     let lastDeletedParent = null;
+    let deletedDetailIds = [];
 
     searchButton.addEventListener("click", searchSlip);
     updateButton.addEventListener("click", updateReturn);
@@ -347,6 +348,11 @@
 
         searchButton.disabled = true;
         setMessage("検索中です...", "");
+        deletedDetailIds = [];
+        undoBanner.classList.remove("is-visible");
+        lastDeletedRow = null;
+        lastDeletedNextSibling = null;
+        lastDeletedParent = null;
 
         try {
             const response = await fetch(`/api/return?slipNo=${encodeURIComponent(slipNo)}`);
@@ -378,18 +384,21 @@
             return;
         }
 
-        const payload = rows.map((row) => ({
-            id: toNullableNumber(row.dataset.detailId),
-            slipId: toNullableNumber(row.dataset.slipId),
-            code: row.dataset.code || "",
-            name: row.dataset.name || "",
-            price: toNullableNumber(row.dataset.price),
-            taxPrice: toNullableNumber(row.dataset.taxPrice),
-            credit: row.dataset.credit || "",
-            note: row.dataset.note || "",
-            returned: row.querySelector("input[type='checkbox']").checked,
-            plannedLabel: row.querySelector("[data-planned-label]").value
-        }));
+        const payload = {
+            details: rows.map((row) => ({
+                id: toNullableNumber(row.dataset.detailId),
+                slipId: toNullableNumber(row.dataset.slipId),
+                code: row.dataset.code || "",
+                name: row.dataset.name || "",
+                price: toNullableNumber(row.dataset.price),
+                taxPrice: toNullableNumber(row.dataset.taxPrice),
+                credit: row.dataset.credit || "",
+                note: row.dataset.note || "",
+                returned: row.querySelector("input[type='checkbox']").checked,
+                plannedLabel: row.querySelector("[data-planned-label]").value
+            })),
+            deletedIds: deletedDetailIds
+        };
 
         updateButton.disabled = true;
         setMessage("更新中です...", "");
@@ -413,6 +422,11 @@
             });
 
             setMessage("返却状態を更新しました。", "success");
+            deletedDetailIds = [];
+            undoBanner.classList.remove("is-visible");
+            lastDeletedRow = null;
+            lastDeletedNextSibling = null;
+            lastDeletedParent = null;
             openUpdateModal();
         } catch (error) {
             setMessage(error.message || "返却状態の更新に失敗しました。", "error");
@@ -554,11 +568,6 @@
     }
 
     function removeDetailRow(row) {
-        if (row.dataset.isCopy !== "true") {
-            setMessage("保存済みの行はここでは削除できません。誤ってコピーした行だけ削除できます。", "error");
-            return;
-        }
-
         pendingDeleteRow = row;
         openDeleteModal();
     }
@@ -583,6 +592,10 @@
         lastDeletedRow = pendingDeleteRow;
         lastDeletedNextSibling = pendingDeleteRow.nextElementSibling;
         lastDeletedParent = pendingDeleteRow.parentElement;
+        const deletedId = toNullableNumber(pendingDeleteRow.dataset.detailId);
+        if (deletedId !== null && !deletedDetailIds.includes(deletedId)) {
+            deletedDetailIds.push(deletedId);
+        }
         pendingDeleteRow.remove();
         closeDeleteModal();
 
@@ -610,6 +623,11 @@
             lastDeletedParent.insertBefore(lastDeletedRow, lastDeletedNextSibling);
         } else {
             lastDeletedParent.appendChild(lastDeletedRow);
+        }
+
+        const restoredId = toNullableNumber(lastDeletedRow.dataset.detailId);
+        if (restoredId !== null) {
+            deletedDetailIds = deletedDetailIds.filter((id) => id !== restoredId);
         }
 
         undoBanner.classList.remove("is-visible");

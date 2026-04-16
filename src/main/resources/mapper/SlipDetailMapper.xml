@@ -124,4 +124,9 @@
         WHERE slip_id = #{slipId}
     </delete>
 
+    <delete id="deleteById">
+        DELETE FROM slip_detail
+        WHERE id = #{id}
+    </delete>
+
 </mapper>
