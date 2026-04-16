@@ -5,6 +5,27 @@
 
 <mapper namespace="com.example.demo.mapper.SlipDetailMapper">
 
+    <resultMap id="slipDetailDtoResultMap" type="com.example.demo.dto.SlipDetailDto">
+        <result property="slipId" column="slipId"/>
+        <result property="slipNo" column="slipNo"/>
+        <result property="staffName" column="staffName"/>
+        <result property="customerName" column="customerName"/>
+        <result property="loanDate" column="loanDate"/>
+        <result property="returnDate" column="returnDate"/>
+        <result property="id" column="id"/>
+        <result property="code" column="code"/>
+        <result property="name" column="name"/>
+        <result property="price" column="price"/>
+        <result property="taxPrice" column="taxPrice"/>
+        <result property="credit" column="credit"/>
+        <result property="plannedLabel" column="plannedLabel"/>
+        <result property="mediaName" column="mediaName"/>
+        <result property="projectName" column="projectName"/>
+        <result property="releaseDate" column="releaseDate"/>
+        <result property="note" column="note"/>
+        <result property="returned" column="returned"/>
+    </resultMap>
+
     <insert id="insert" parameterType="com.example.demo.entity.SlipDetail" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
         INSERT INTO slip_detail (
             slip_id,
@@ -59,7 +80,7 @@
         WHERE id = #{id}
     </update>
 
-    <select id="findSlipRowsBySlipNo" resultType="com.example.demo.dto.SlipDetailDto">
+    <select id="findSlipRowsBySlipNo" resultMap="slipDetailDtoResultMap">
         SELECT s.id AS slipId,
                s.slip_no AS slipNo,
                s.staff_name AS staffName,
@@ -83,7 +104,7 @@
         ORDER BY d.id
     </select>
 
-    <select id="findSlipRowsByCode" resultType="com.example.demo.dto.SlipDetailDto">
+    <select id="findSlipRowsByCode" resultMap="slipDetailDtoResultMap">
         SELECT s.id AS slipId,
                s.slip_no AS slipNo,
                s.staff_name AS staffName,
