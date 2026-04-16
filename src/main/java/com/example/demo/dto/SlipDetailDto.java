@@ -15,6 +15,7 @@ public class SlipDetailDto {
     private Integer price;
     private Integer taxPrice;
     private String credit;
+    private String plannedLabel;
     private String mediaName;
     private String projectName;
     private LocalDate releaseDate;
@@ -107,6 +108,14 @@ public class SlipDetailDto {
 
     public void setCredit(String credit) {
         this.credit = credit;
+    }
+
+    public String getPlannedLabel() {
+        return plannedLabel;
+    }
+
+    public void setPlannedLabel(String plannedLabel) {
+        this.plannedLabel = plannedLabel;
     }
 
     public String getMediaName() {

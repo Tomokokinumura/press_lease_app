@@ -13,6 +13,7 @@
             price,
             tax_price,
             credit,
+            planned_label,
             media_name,
             release_date,
             note
@@ -23,6 +24,7 @@
             #{price},
             #{taxPrice},
             #{credit},
+            #{plannedLabel},
             #{mediaName},
             #{releaseDate},
             #{note}
@@ -37,6 +39,7 @@
                d.price,
                d.tax_price AS taxPrice,
                d.credit,
+               d.planned_label AS plannedLabel,
                d.media_name AS mediaName,
                d.release_date AS releaseDate,
                d.note,
@@ -67,6 +70,7 @@
                d.price,
                d.tax_price AS taxPrice,
                d.credit,
+               d.planned_label AS plannedLabel,
                d.media_name AS mediaName,
                d.release_date AS releaseDate,
                d.note,
@@ -89,6 +93,7 @@
                d.price,
                d.tax_price AS taxPrice,
                d.credit,
+               d.planned_label AS plannedLabel,
                d.media_name AS mediaName,
                d.release_date AS releaseDate,
                d.note,
@@ -106,6 +111,7 @@
             price = #{price},
             tax_price = #{taxPrice},
             credit = #{credit},
+            planned_label = #{plannedLabel},
             media_name = #{mediaName},
             release_date = #{releaseDate},
             note = #{note}

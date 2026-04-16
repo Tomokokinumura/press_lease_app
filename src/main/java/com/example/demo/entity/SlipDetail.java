@@ -11,6 +11,7 @@ public class SlipDetail {
     private Integer price;
     private Integer taxPrice;
     private String credit;
+    private String plannedLabel;
     private String mediaName;
     private LocalDate releaseDate;
     private String note;
@@ -71,6 +72,14 @@ public class SlipDetail {
 
     public void setCredit(String credit) {
         this.credit = credit;
+    }
+
+    public String getPlannedLabel() {
+        return plannedLabel;
+    }
+
+    public void setPlannedLabel(String plannedLabel) {
+        this.plannedLabel = plannedLabel;
     }
 
     public String getMediaName() {

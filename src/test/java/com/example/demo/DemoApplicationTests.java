@@ -176,21 +176,23 @@ class DemoApplicationTests {
 
     @Test
     void returnApiReturnsSlipDetails() throws Exception {
-        SlipDetail detail = new SlipDetail();
+        SlipDetailDto detail = new SlipDetailDto();
         detail.setId(1);
         detail.setCode("12345678");
         detail.setName("Product A");
         detail.setPrice(1000);
         detail.setTaxPrice(1100);
         detail.setCredit("Yamada");
+        detail.setPlannedLabel("A");
         detail.setReturned(Boolean.TRUE);
 
-        given(slipDetailMapper.findBySlipNo("202604001")).willReturn(List.of(detail));
+        given(slipService.findBySlipNo("202604001")).willReturn(List.of(detail));
 
         mockMvc.perform(get("/api/return").param("slipNo", "202604001"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").value(1))
                 .andExpect(jsonPath("$[0].code").value("12345678"))
+                .andExpect(jsonPath("$[0].plannedLabel").value("A"))
                 .andExpect(jsonPath("$[0].returned").value(true));
     }
 

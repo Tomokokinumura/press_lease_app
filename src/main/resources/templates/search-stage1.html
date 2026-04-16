@@ -102,6 +102,7 @@
         .field input,
         .search-row input,
         .media-row input,
+        tbody select,
         tbody input,
         .action-buttons button {
             border: 1px solid var(--line);
@@ -113,6 +114,7 @@
         .field input:focus,
         .search-row input:focus,
         .media-row input:focus,
+        tbody select:focus,
         tbody input:focus {
             outline: none;
             border-color: var(--accent);
@@ -138,9 +140,14 @@
         .media-rows { display: grid; gap: 10px; }
         .media-row {
             display: grid;
-            grid-template-columns: 1.2fr 1.2fr 0.95fr 0.7fr auto;
+            grid-template-columns: 0.45fr 1.2fr 1.2fr 0.95fr 0.7fr auto;
             gap: 10px;
             align-items: end;
+        }
+        .media-row [data-planned-code] {
+            text-align: center;
+            font-weight: 700;
+            background: #f5eadf;
         }
         .media-row .remove-btn {
             border: 1px solid var(--line);
@@ -272,12 +279,14 @@
                     <th>価格</th>
                     <th>税込価格</th>
                     <th>クレジット</th>
+                    <th>掲載予定</th>
                     <th>明細備考</th>
+                    <th>コピー</th>
                 </tr>
                 </thead>
                 <tbody id="resultTable">
                 <tr id="emptyRow">
-                    <td class="empty" colspan="6">品番を入力して Enter を押すと、ここに明細が追加されます。</td>
+                    <td class="empty" colspan="8">品番を入力して Enter を押すと、ここに明細が追加されます。</td>
                 </tr>
                 </tbody>
             </table>
@@ -388,6 +397,10 @@
         row.dataset.mediaRow = "true";
         row.innerHTML = `
             <div class="field">
+                <label>掲載予定</label>
+                <input type="text" data-planned-code readonly value="">
+            </div>
+            <div class="field">
                 <label>媒体名</label>
                 <input type="text" data-media-name value="${escapeHtml(values.mediaName ?? "")}">
             </div>
@@ -406,36 +419,38 @@
             <button type="button" class="remove-btn" data-remove-media>行削除</button>
         `;
 
+        row.querySelectorAll("[data-media-name], [data-project-name], [data-release-date], [data-note]").forEach((input) => {
+            input.addEventListener("input", refreshPlannedOptions);
+            input.addEventListener("change", refreshPlannedOptions);
+        });
         row.querySelector("[data-remove-media]").addEventListener("click", () => {
             row.remove();
             if (mediaRows.querySelectorAll("[data-media-row='true']").length === 0) {
                 appendMediaRow();
+                return;
             }
+            refreshMediaRowLabels();
+            refreshPlannedOptions();
         });
 
         mediaRows.appendChild(row);
+        refreshMediaRowLabels();
+        refreshPlannedOptions();
     }
 
     function appendResultRow(data) {
-        const emptyRow = document.getElementById(emptyRowId);
-        if (emptyRow) {
-            emptyRow.remove();
-        }
-
         const taxIncludedPrice = parsePrice(data.price);
         const basePrice = Number.isFinite(taxIncludedPrice) ? Math.ceil(taxIncludedPrice / 1.1) : "";
         const taxIncludedDisplay = Number.isFinite(taxIncludedPrice) ? String(taxIncludedPrice) : String(data.price ?? "");
-        const row = document.createElement("tr");
-        row.dataset.detailRow = "true";
-        row.innerHTML = `
-            <td><input type="text" value="${escapeHtml(data.code ?? "")}"></td>
-            <td><input type="text" value="${escapeHtml(data.name ?? "")}"></td>
-            <td><input type="text" value="${escapeHtml(String(basePrice))}"></td>
-            <td><input type="text" value="${escapeHtml(taxIncludedDisplay)}"></td>
-            <td><input type="text" value=""></td>
-            <td><input type="text" value=""></td>
-        `;
-        resultTable.appendChild(row);
+        appendDetailRow({
+            code: data.code ?? "",
+            name: data.name ?? "",
+            price: String(basePrice),
+            taxPrice: taxIncludedDisplay,
+            credit: "",
+            plannedLabel: getDefaultPlannedLabel(),
+            note: ""
+        });
     }
 
     async function loadSlip(slipNo) {
@@ -488,11 +503,23 @@
         if (details.length) {
             details.forEach((detail) => appendExistingDetailRow(detail));
         } else {
-            resultTable.innerHTML = `<tr id="${emptyRowId}"><td class="empty" colspan="6">品番を入力して Enter を押すと、ここに明細が追加されます。</td></tr>`;
+            resultTable.innerHTML = `<tr id="${emptyRowId}"><td class="empty" colspan="8">品番を入力して Enter を押すと、ここに明細が追加されます。</td></tr>`;
         }
     }
 
     function appendExistingDetailRow(detail) {
+        appendDetailRow({
+            code: detail.code ?? "",
+            name: detail.name ?? "",
+            price: detail.price ?? "",
+            taxPrice: detail.taxPrice ?? "",
+            credit: detail.credit ?? "",
+            plannedLabel: detail.plannedLabel ?? "",
+            note: detail.note ?? ""
+        });
+    }
+
+    function appendDetailRow(values = {}) {
         const emptyRow = document.getElementById(emptyRowId);
         if (emptyRow) {
             emptyRow.remove();
@@ -500,13 +527,20 @@
         const row = document.createElement("tr");
         row.dataset.detailRow = "true";
         row.innerHTML = `
-            <td><input type="text" value="${escapeHtml(detail.code ?? "")}"></td>
-            <td><input type="text" value="${escapeHtml(detail.name ?? "")}"></td>
-            <td><input type="text" value="${escapeHtml(detail.price ?? "")}"></td>
-            <td><input type="text" value="${escapeHtml(detail.taxPrice ?? "")}"></td>
-            <td><input type="text" value="${escapeHtml(detail.credit ?? "")}"></td>
-            <td><input type="text" value="${escapeHtml(detail.note ?? "")}"></td>
+            <td><input type="text" data-detail-code value="${escapeHtml(values.code ?? "")}"></td>
+            <td><input type="text" data-detail-name value="${escapeHtml(values.name ?? "")}"></td>
+            <td><input type="text" data-detail-price value="${escapeHtml(String(values.price ?? ""))}"></td>
+            <td><input type="text" data-detail-tax-price value="${escapeHtml(String(values.taxPrice ?? ""))}"></td>
+            <td><input type="text" data-detail-credit value="${escapeHtml(values.credit ?? "")}"></td>
+            <td>
+                <select data-detail-planned-label>
+                    ${renderPlannedOptions(values.plannedLabel ?? getDefaultPlannedLabel())}
+                </select>
+            </td>
+            <td><input type="text" data-detail-note value="${escapeHtml(values.note ?? "")}"></td>
+            <td><button type="button" class="secondary" data-copy-detail>コピー</button></td>
         `;
+        row.querySelector("[data-copy-detail]").addEventListener("click", () => copyDetailRow(row));
         resultTable.appendChild(row);
     }
     async function saveSlip() {
@@ -630,30 +664,30 @@
 
     function collectDetails() {
         return Array.from(document.querySelectorAll("#resultTable tr[data-detail-row='true']")).map((row) => {
-            const inputs = row.querySelectorAll("input");
             return {
-                code: normalizeText(inputs[0].value),
-                name: normalizeText(inputs[1].value),
-                price: toNullableInt(inputs[2].value),
-                taxPrice: toNullableInt(inputs[3].value),
-                credit: normalizeText(inputs[4].value),
-                note: normalizeText(inputs[5].value)
+                code: normalizeText(row.querySelector("[data-detail-code]").value),
+                name: normalizeText(row.querySelector("[data-detail-name]").value),
+                price: toNullableInt(row.querySelector("[data-detail-price]").value),
+                taxPrice: toNullableInt(row.querySelector("[data-detail-tax-price]").value),
+                credit: normalizeText(row.querySelector("[data-detail-credit]").value),
+                plannedLabel: normalizeText(row.querySelector("[data-detail-planned-label]").value),
+                note: normalizeText(row.querySelector("[data-detail-note]").value)
             };
         });
     }
 
     function collectDetailsForExcel() {
         return Array.from(document.querySelectorAll("#resultTable tr[data-detail-row='true']")).map((row) => {
-            const inputs = row.querySelectorAll("input");
             return {
-                credit: normalizeText(inputs[4].value),
-                code: normalizeText(inputs[0].value),
-                name: normalizeText(inputs[1].value),
-                price: toNullableInt(inputs[2].value),
-                taxPrice: toNullableInt(inputs[3].value),
+                credit: normalizeText(row.querySelector("[data-detail-credit]").value),
+                code: normalizeText(row.querySelector("[data-detail-code]").value),
+                name: normalizeText(row.querySelector("[data-detail-name]").value),
+                price: toNullableInt(row.querySelector("[data-detail-price]").value),
+                taxPrice: toNullableInt(row.querySelector("[data-detail-tax-price]").value),
+                plannedLabel: normalizeText(row.querySelector("[data-detail-planned-label]").value),
                 mediaName: "",
                 releaseDate: null,
-                note: normalizeText(inputs[5].value)
+                note: normalizeText(row.querySelector("[data-detail-note]").value)
             };
         });
     }
@@ -681,6 +715,75 @@
         const normalized = String(value ?? "").replace(/,/g, "").trim();
         const parsed = Number.parseFloat(normalized);
         return Number.isFinite(parsed) ? parsed : NaN;
+    }
+
+    function refreshMediaRowLabels() {
+        Array.from(document.querySelectorAll("[data-media-row='true']")).forEach((row, index) => {
+            row.querySelector("[data-planned-code]").value = buildPlannedLabel(index);
+        });
+    }
+
+    function refreshPlannedOptions() {
+        const selects = document.querySelectorAll("[data-detail-planned-label]");
+        selects.forEach((select) => {
+            const selectedValue = select.value;
+            select.innerHTML = renderPlannedOptions(selectedValue);
+            if (!select.value) {
+                const fallback = selectedValue || getDefaultPlannedLabel();
+                if (fallback) {
+                    select.value = fallback;
+                }
+            }
+        });
+    }
+
+    function renderPlannedOptions(selectedValue) {
+        const options = ['<option value="">未選択</option>'];
+        getPlannedCandidates().forEach((candidate) => {
+            const selected = candidate.label === selectedValue ? " selected" : "";
+            options.push(`<option value="${escapeHtml(candidate.label)}"${selected}>${escapeHtml(candidate.text)}</option>`);
+        });
+        return options.join("");
+    }
+
+    function getPlannedCandidates() {
+        return Array.from(document.querySelectorAll("[data-media-row='true']")).map((row, index) => {
+            const label = buildPlannedLabel(index);
+            const mediaName = normalizeText(row.querySelector("[data-media-name]").value);
+            const projectName = normalizeText(row.querySelector("[data-project-name]").value);
+            const summary = [mediaName, projectName].filter(Boolean).join(" / ");
+            return {
+                label,
+                text: summary ? `${label}: ${summary}` : `${label}: 媒体情報未入力`
+            };
+        });
+    }
+
+    function getDefaultPlannedLabel() {
+        const firstCandidate = getPlannedCandidates()[0];
+        return firstCandidate ? firstCandidate.label : "";
+    }
+
+    function buildPlannedLabel(index) {
+        return String.fromCharCode(65 + index);
+    }
+
+    function copyDetailRow(sourceRow) {
+        if (document.querySelectorAll("#resultTable tr[data-detail-row='true']").length >= maxRows) {
+            setMessage("明細は最大10行まで追加できます。", "error");
+            return;
+        }
+
+        appendDetailRow({
+            code: sourceRow.querySelector("[data-detail-code]").value,
+            name: sourceRow.querySelector("[data-detail-name]").value,
+            price: sourceRow.querySelector("[data-detail-price]").value,
+            taxPrice: sourceRow.querySelector("[data-detail-tax-price]").value,
+            credit: sourceRow.querySelector("[data-detail-credit]").value,
+            plannedLabel: sourceRow.querySelector("[data-detail-planned-label]").value,
+            note: sourceRow.querySelector("[data-detail-note]").value
+        });
+        setMessage("明細をコピーしました。掲載予定を切り替えて保存できます。", "success");
     }
 
     function toNullableInt(value) {

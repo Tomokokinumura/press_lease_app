@@ -10,22 +10,26 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.demo.dto.SlipDetailDto;
 import com.example.demo.entity.SlipDetail;
 import com.example.demo.mapper.SlipDetailMapper;
+import com.example.demo.service.SlipService;
 
 @RestController
 @RequestMapping("/api/return")
 public class ReturnApiController {
 
     private final SlipDetailMapper slipDetailMapper;
+    private final SlipService slipService;
 
-    public ReturnApiController(SlipDetailMapper slipDetailMapper) {
+    public ReturnApiController(SlipDetailMapper slipDetailMapper, SlipService slipService) {
         this.slipDetailMapper = slipDetailMapper;
+        this.slipService = slipService;
     }
 
     @GetMapping
-    public List<SlipDetail> getSlipDetails(@RequestParam String slipNo) {
-        return slipDetailMapper.findBySlipNo(slipNo == null ? "" : slipNo.trim());
+    public List<SlipDetailDto> getSlipDetails(@RequestParam String slipNo) {
+        return slipService.findBySlipNo(slipNo == null ? "" : slipNo.trim());
     }
 
     @PostMapping("/update")

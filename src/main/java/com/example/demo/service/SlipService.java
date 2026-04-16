@@ -52,6 +52,7 @@ public class SlipService {
                 price INT,
                 tax_price INT,
                 credit VARCHAR(100),
+                planned_label VARCHAR(10),
                 media_name VARCHAR(100),
                 release_date DATE,
                 note VARCHAR(255),
@@ -60,6 +61,10 @@ public class SlipService {
                 CONSTRAINT fk_slip_detail_slip
                     FOREIGN KEY (slip_id) REFERENCES slip(id)
             )
+            """;
+    private static final String ALTER_SLIP_DETAIL_ADD_PLANNED_LABEL_SQL = """
+            ALTER TABLE slip_detail
+            ADD COLUMN IF NOT EXISTS planned_label VARCHAR(10)
             """;
     private static final String CREATE_SLIP_MEDIA_TABLE_SQL = """
             CREATE TABLE IF NOT EXISTS slip_media (
@@ -299,13 +304,24 @@ public class SlipService {
                 mediaEntries = Collections.emptyList();
             }
 
+            Map<String, SlipMedia> mediaByLabel = new LinkedHashMap<>();
+            for (int i = 0; i < mediaEntries.size(); i++) {
+                mediaByLabel.put(buildPlannedLabel(i), mediaEntries.get(i));
+            }
+
             List<SlipDetailDto> detailRows = entry.getValue();
             for (int i = 0; i < detailRows.size(); i++) {
                 SlipDetailDto row = detailRows.get(i);
-                if (i >= mediaEntries.size()) {
+                SlipMedia media = null;
+                if (hasText(row.getPlannedLabel())) {
+                    media = mediaByLabel.get(row.getPlannedLabel());
+                }
+                if (media == null && i < mediaEntries.size()) {
+                    media = mediaEntries.get(i);
+                }
+                if (media == null) {
                     continue;
                 }
-                SlipMedia media = mediaEntries.get(i);
                 row.setMediaName(media.getMediaName());
                 row.setProjectName(media.getProjectName());
                 row.setReleaseDate(media.getReleaseDate());
@@ -318,6 +334,11 @@ public class SlipService {
     private void ensureSlipTables() {
         jdbcTemplate.execute(CREATE_SLIP_TABLE_SQL);
         jdbcTemplate.execute(CREATE_SLIP_DETAIL_TABLE_SQL);
+        jdbcTemplate.execute(ALTER_SLIP_DETAIL_ADD_PLANNED_LABEL_SQL);
         jdbcTemplate.execute(CREATE_SLIP_MEDIA_TABLE_SQL);
+    }
+
+    private String buildPlannedLabel(int index) {
+        return String.valueOf((char) ('A' + index));
     }
 }

@@ -224,11 +224,12 @@
                     <th>税込価格</th>
                     <th>クレジット</th>
                     <th>状態</th>
+                    <th>掲載予定</th>
                 </tr>
                 </thead>
                 <tbody id="resultTable">
                 <tr id="emptyRow">
-                    <td colspan="7" class="empty">伝票Noを入力して検索してください。</td>
+                    <td colspan="8" class="empty">伝票Noを入力して検索してください。</td>
                 </tr>
                 </tbody>
             </table>
@@ -347,7 +348,7 @@
 
     function renderRows(details) {
         if (!details.length) {
-            resultTable.innerHTML = '<tr id="emptyRow"><td colspan="7" class="empty">検索結果がありません。</td></tr>';
+            resultTable.innerHTML = '<tr id="emptyRow"><td colspan="8" class="empty">検索結果がありません。</td></tr>';
             return;
         }
 
@@ -364,6 +365,7 @@
                     <td data-status>${returned
                         ? '<span class="status-badge is-returned">返却済み</span>'
                         : '<span class="status-badge">未返却</span>'}</td>
+                    <td>${escapeHtml(formatPlannedPublication(detail))}</td>
                 </tr>
             `;
         }).join("");
@@ -394,6 +396,20 @@
     function closeUpdateModal() {
         updateModal.classList.remove("is-open");
         updateModal.setAttribute("aria-hidden", "true");
+    }
+
+    function formatPlannedPublication(detail) {
+        const label = String(detail.plannedLabel ?? "").trim();
+        const mediaName = String(detail.mediaName ?? "").trim();
+        const projectName = String(detail.projectName ?? "").trim();
+        const summary = [mediaName, projectName].filter(Boolean).join(" / ");
+        if (label && summary) {
+            return `${label}: ${summary}`;
+        }
+        if (label) {
+            return label;
+        }
+        return summary;
     }
 
     function escapeHtml(value) {

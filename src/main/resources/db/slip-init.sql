@@ -18,6 +18,7 @@ CREATE TABLE IF NOT EXISTS slip_detail (
     price INT,
     tax_price INT,
     credit VARCHAR(100),
+    planned_label VARCHAR(10),
     media_name VARCHAR(100),
     release_date DATE,
     note VARCHAR(255),
