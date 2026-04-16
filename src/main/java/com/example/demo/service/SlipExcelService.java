@@ -100,8 +100,7 @@ public class SlipExcelService {
             throw new ResponseStatusException(NOT_FOUND, "Slip not found: " + slipNo);
         }
 
-        List<SlipDetailDto> rows = slipDetailMapper.findSlipRowsBySlipNo(slipNo).stream().toList();
-        rows = rows.isEmpty() ? rows : enrichRowsWithMedia(rows);
+        List<SlipDetailDto> rows = enrichRowsWithMedia(slipDetailMapper.findSlipRowsBySlipNo(slipNo));
 
         byte[] bytes = renderRawWorkbook(rows);
 
@@ -109,6 +108,22 @@ public class SlipExcelService {
         response.setHeader(
                 HttpHeaders.CONTENT_DISPOSITION,
                 "attachment; filename=slip_raw_" + slipNo + ".xlsx");
+        response.getOutputStream().write(bytes);
+        response.flushBuffer();
+    }
+
+    public void exportRawByCode(String code, HttpServletResponse response) throws IOException {
+        List<SlipDetailDto> rows = enrichRowsWithMedia(slipDetailMapper.findSlipRowsByCode(code));
+        if (rows.isEmpty()) {
+            throw new ResponseStatusException(NOT_FOUND, "No rows found for code: " + code);
+        }
+
+        byte[] bytes = renderRawWorkbook(rows);
+
+        response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        response.setHeader(
+                HttpHeaders.CONTENT_DISPOSITION,
+                "attachment; filename=slip_raw_code_" + code + ".xlsx");
         response.getOutputStream().write(bytes);
         response.flushBuffer();
     }
@@ -165,7 +180,10 @@ public class SlipExcelService {
             CellStyle headerStyle = createHeaderStyle(workbook);
             CellStyle dateStyle = createDateStyle(workbook);
 
-            String[] headers = {`r`n                    "Status", "Slip No", "Staff Name", "Code", "Title", "Price", "Tax Price",`r`n                    "Credit", "Media Name", "Project Name", "Release Date", "Loan Date", "Return Date", "Note"`r`n            };
+            String[] headers = {
+                    "Status", "Slip No", "Staff Name", "Code", "Title", "Price", "Tax Price",
+                    "Credit", "Media Name", "Project Name", "Release Date", "Loan Date", "Return Date", "Note"
+            };
 
             Row headerRow = sheet.createRow(0);
             for (int i = 0; i < headers.length; i++) {
@@ -253,17 +271,29 @@ public class SlipExcelService {
     }
 
     private List<SlipDetailDto> enrichRowsWithMedia(List<SlipDetailDto> rows) {
-        Integer slipId = rows.get(0).getSlipId();
-        if (slipId == null) {
-            return rows;
+        if (rows == null || rows.isEmpty()) {
+            return Collections.emptyList();
         }
-        List<SlipMedia> mediaEntries = slipMediaMapper.findBySlipId(slipId);
-        if (mediaEntries == null || mediaEntries.isEmpty()) {
-            return rows;
-        }
-        for (int i = 0; i < rows.size() && i < mediaEntries.size(); i++) {
-            SlipMedia media = mediaEntries.get(i);
-            SlipDetailDto row = rows.get(i);
+        Integer currentSlipId = null;
+        List<SlipMedia> mediaEntries = Collections.emptyList();
+        int mediaIndex = 0;
+
+        for (SlipDetailDto row : rows) {
+            if (row.getSlipId() == null) {
+                continue;
+            }
+            if (!row.getSlipId().equals(currentSlipId)) {
+                currentSlipId = row.getSlipId();
+                mediaEntries = slipMediaMapper.findBySlipId(currentSlipId);
+                if (mediaEntries == null) {
+                    mediaEntries = Collections.emptyList();
+                }
+                mediaIndex = 0;
+            }
+            if (mediaIndex >= mediaEntries.size()) {
+                continue;
+            }
+            SlipMedia media = mediaEntries.get(mediaIndex++);
             row.setMediaName(media.getMediaName());
             row.setProjectName(media.getProjectName());
             row.setReleaseDate(media.getReleaseDate());

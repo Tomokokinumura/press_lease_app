@@ -28,4 +28,9 @@ public class SlipExcelController {
     public void exportRaw(@PathVariable String slipNo, HttpServletResponse response) throws IOException {
         slipExcelService.exportRawSlip(slipNo, response);
     }
+
+    @GetMapping("/excel/export/raw/code/{code}")
+    public void exportRawByCode(@PathVariable String code, HttpServletResponse response) throws IOException {
+        slipExcelService.exportRawByCode(code, response);
+    }
 }

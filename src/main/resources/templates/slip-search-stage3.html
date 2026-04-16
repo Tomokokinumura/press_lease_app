@@ -372,12 +372,27 @@
     }
 
     function downloadExcel() {
-        const slipNo = resolveDeletableSlipNo() || slipNoInput.value.trim();
-        if (!slipNo) {
-            setMessage("Excel出力する伝票Noを入力してください。", "error");
+        if (currentMode === "slip") {
+            const slipNo = resolveDeletableSlipNo() || slipNoInput.value.trim();
+            if (!slipNo) {
+                setMessage("Excel出力する伝票Noを入力してください。", "error");
+                return;
+            }
+            window.location.href = `/excel/export/raw/${encodeURIComponent(slipNo)}`;
             return;
         }
-        window.location.href = `/excel/export/raw/${encodeURIComponent(slipNo)}`;
+
+        if (currentMode === "code") {
+            const code = codeInput.value.trim();
+            if (!code) {
+                setMessage("Excel出力する品番を入力してください。", "error");
+                return;
+            }
+            window.location.href = `/excel/export/raw/code/${encodeURIComponent(code)}`;
+            return;
+        }
+
+        setMessage("先に伝票Noまたは品番で検索してください。", "error");
     }
 
     async function deleteSlip() {
