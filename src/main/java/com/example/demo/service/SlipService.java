@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Collections;
 import java.util.stream.Collectors;
 
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -29,15 +30,64 @@ public class SlipService {
 
     private static final int MAX_DETAIL_COUNT = 10;
     private static final DateTimeFormatter SLIP_NO_FORMATTER = DateTimeFormatter.ofPattern("yyyyMM");
+    private static final String CREATE_SLIP_TABLE_SQL = """
+            CREATE TABLE IF NOT EXISTS slip (
+                id SERIAL PRIMARY KEY,
+                slip_no VARCHAR(20),
+                staff_name VARCHAR(50),
+                customer_name VARCHAR(100),
+                contact_info VARCHAR(100),
+                email_address VARCHAR(100),
+                loan_date DATE,
+                return_date DATE,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+            """;
+    private static final String CREATE_SLIP_DETAIL_TABLE_SQL = """
+            CREATE TABLE IF NOT EXISTS slip_detail (
+                id SERIAL PRIMARY KEY,
+                slip_id INT,
+                code VARCHAR(20),
+                name VARCHAR(100),
+                price INT,
+                tax_price INT,
+                credit VARCHAR(100),
+                media_name VARCHAR(100),
+                release_date DATE,
+                note VARCHAR(255),
+                returned BOOLEAN DEFAULT FALSE,
+                returned_date DATE,
+                CONSTRAINT fk_slip_detail_slip
+                    FOREIGN KEY (slip_id) REFERENCES slip(id)
+            )
+            """;
+    private static final String CREATE_SLIP_MEDIA_TABLE_SQL = """
+            CREATE TABLE IF NOT EXISTS slip_media (
+                id SERIAL PRIMARY KEY,
+                slip_id INT,
+                media_name VARCHAR(100),
+                project_name VARCHAR(100),
+                release_date DATE,
+                note VARCHAR(255),
+                CONSTRAINT fk_slip_media_slip
+                    FOREIGN KEY (slip_id) REFERENCES slip(id)
+            )
+            """;
 
     private final SlipMapper slipMapper;
     private final SlipDetailMapper slipDetailMapper;
     private final SlipMediaMapper slipMediaMapper;
+    private final JdbcTemplate jdbcTemplate;
 
-    public SlipService(SlipMapper slipMapper, SlipDetailMapper slipDetailMapper, SlipMediaMapper slipMediaMapper) {
+    public SlipService(
+            SlipMapper slipMapper,
+            SlipDetailMapper slipDetailMapper,
+            SlipMediaMapper slipMediaMapper,
+            JdbcTemplate jdbcTemplate) {
         this.slipMapper = slipMapper;
         this.slipDetailMapper = slipDetailMapper;
         this.slipMediaMapper = slipMediaMapper;
+        this.jdbcTemplate = jdbcTemplate;
     }
 
     public String generateSlipNo() {
@@ -49,6 +99,7 @@ public class SlipService {
 
     @Transactional
     public SaveSlipResponse saveSlip(SlipRequest request) {
+        ensureSlipTables();
         validateRequest(request);
         Slip slip = resolveSlipForSave(request);
 
@@ -112,6 +163,7 @@ public class SlipService {
 
     @Transactional
     public void updateDetails(List<SlipDetailDto> list) {
+        ensureSlipTables();
         if (list == null || list.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "At least one detail row is required.");
         }
@@ -146,6 +198,7 @@ public class SlipService {
 
     @Transactional
     public void deleteBySlipNo(String slipNo) {
+        ensureSlipTables();
         if (!hasText(slipNo)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Slip number is required.");
         }
@@ -260,5 +313,11 @@ public class SlipService {
         }
 
         return rows;
+    }
+
+    private void ensureSlipTables() {
+        jdbcTemplate.execute(CREATE_SLIP_TABLE_SQL);
+        jdbcTemplate.execute(CREATE_SLIP_DETAIL_TABLE_SQL);
+        jdbcTemplate.execute(CREATE_SLIP_MEDIA_TABLE_SQL);
     }
 }
