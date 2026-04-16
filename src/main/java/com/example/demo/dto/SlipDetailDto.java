@@ -7,6 +7,7 @@ public class SlipDetailDto {
     private Integer slipId;
     private String slipNo;
     private String staffName;
+    private String customerName;
     private LocalDate loanDate;
     private LocalDate returnDate;
     private Integer id;
@@ -44,6 +45,14 @@ public class SlipDetailDto {
 
     public void setStaffName(String staffName) {
         this.staffName = staffName;
+    }
+
+    public String getCustomerName() {
+        return customerName;
+    }
+
+    public void setCustomerName(String customerName) {
+        this.customerName = customerName;
     }
 
     public LocalDate getLoanDate() {
