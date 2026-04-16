@@ -29,10 +29,19 @@ public class SheetController {
 
     @GetMapping("/search")
     public SheetSearchResponse search(@RequestParam String code) throws Exception {
-        return googleSheetsService.findByCode(code)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "No row found for code: " + code));
+        try {
+            return googleSheetsService.findByCode(code)
+                    .orElseThrow(() -> new ResponseStatusException(
+                            HttpStatus.NOT_FOUND,
+                            "Code " + code + " was not found."));
+        } catch (ResponseStatusException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            throw new ResponseStatusException(
+                    HttpStatus.SERVICE_UNAVAILABLE,
+                    "Search service is temporarily unavailable.",
+                    ex);
+        }
     }
 
     @PostMapping("/saveSlip")

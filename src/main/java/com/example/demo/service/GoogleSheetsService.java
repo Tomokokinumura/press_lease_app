@@ -2,6 +2,7 @@ package com.example.demo.service;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.math.BigDecimal;
 import java.security.GeneralSecurityException;
 import java.util.Collections;
 import java.util.List;
@@ -44,11 +45,12 @@ public class GoogleSheetsService {
     }
 
     public Optional<SheetSearchResponse> findByCode(String code) throws IOException, GeneralSecurityException {
+        String normalizedCode = normalizeCode(code);
         List<List<Object>> rows = getSheetData();
         return rows.stream()
                 .skip(1)
-                .filter(row -> !row.isEmpty())
-                .filter(row -> code.equals(String.valueOf(row.get(CODE_COLUMN_INDEX)).trim()))
+                .filter(row -> hasCell(row, CODE_COLUMN_INDEX))
+                .filter(row -> normalizedCode.equals(normalizeCode(row.get(CODE_COLUMN_INDEX))))
                 .findFirst()
                 .map(this::toResponse);
     }
@@ -90,5 +92,28 @@ public class GoogleSheetsService {
             return "";
         }
         return String.valueOf(row.get(index));
+    }
+
+    private boolean hasCell(List<Object> row, int index) {
+        return row != null && index < row.size() && row.get(index) != null;
+    }
+
+    private String normalizeCode(Object value) {
+        if (value == null) {
+            return "";
+        }
+        if (value instanceof Number number) {
+            return new BigDecimal(number.toString())
+                    .stripTrailingZeros()
+                    .toPlainString()
+                    .replace(".", "")
+                    .trim();
+        }
+
+        String text = String.valueOf(value).trim();
+        if (text.endsWith(".0")) {
+            text = text.substring(0, text.length() - 2);
+        }
+        return text.replaceAll("\\s+", "");
     }
 }
