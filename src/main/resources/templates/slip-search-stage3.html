@@ -149,6 +149,30 @@
             border-bottom: 1px solid var(--line);
             white-space: nowrap;
         }
+        thead th.sortable {
+            cursor: pointer;
+            user-select: none;
+            position: relative;
+            padding-right: 32px;
+        }
+        thead th.sortable:hover {
+            background: #e7d6c1;
+        }
+        thead th.sortable::after {
+            content: "↕";
+            position: absolute;
+            right: 12px;
+            color: var(--muted);
+            font-size: 12px;
+        }
+        thead th.sortable[data-sort-direction="asc"]::after {
+            content: "▲";
+            color: var(--accent-dark);
+        }
+        thead th.sortable[data-sort-direction="desc"]::after {
+            content: "▼";
+            color: var(--accent-dark);
+        }
         tbody td {
             padding: 10px 12px;
             border-bottom: 1px solid #efe5d6;
@@ -232,20 +256,20 @@
             <table>
                 <thead>
                 <tr>
-                    <th>状態</th>
-                    <th>伝票No</th>
-                    <th>品番</th>
-                    <th>タイトル</th>
-                    <th>価格</th>
-                    <th>税込</th>
-                    <th>クレジット</th>
-                    <th>氏名</th>
-                    <th>媒体名</th>
-                    <th>企画名</th>
-                    <th>発売日</th>
-                    <th>貸出日</th>
-                    <th>返却日</th>
-                    <th>備考</th>
+                    <th class="sortable" data-sort-key="returned">状態</th>
+                    <th class="sortable" data-sort-key="slipNo">伝票No</th>
+                    <th class="sortable" data-sort-key="code">品番</th>
+                    <th class="sortable" data-sort-key="name">タイトル</th>
+                    <th class="sortable" data-sort-key="price">価格</th>
+                    <th class="sortable" data-sort-key="taxPrice">税込</th>
+                    <th class="sortable" data-sort-key="credit">クレジット</th>
+                    <th class="sortable" data-sort-key="customerName">氏名</th>
+                    <th class="sortable" data-sort-key="mediaName">媒体名</th>
+                    <th class="sortable" data-sort-key="projectName">企画名</th>
+                    <th class="sortable" data-sort-key="releaseDate">発売日</th>
+                    <th class="sortable" data-sort-key="loanDate">貸出日</th>
+                    <th class="sortable" data-sort-key="returnDate">返却日</th>
+                    <th class="sortable" data-sort-key="note">備考</th>
                     <th>編集</th>
                 </tr>
                 </thead>
@@ -285,8 +309,14 @@
     const deleteModalMessage = document.getElementById("deleteModalMessage");
     const cancelDeleteButton = document.getElementById("cancelDeleteButton");
     const confirmDeleteButton = document.getElementById("confirmDeleteButton");
+    const sortableHeaders = Array.from(document.querySelectorAll("th.sortable"));
 
     let currentMode = "";
+    let currentRows = [];
+    let currentSort = {
+        key: "",
+        direction: "asc"
+    };
 
     searchSlipButton.addEventListener("click", () => runSearch("slip"));
     searchCodeButton.addEventListener("click", () => runSearch("code"));
@@ -294,6 +324,9 @@
     deleteButton.addEventListener("click", openDeleteModal);
     cancelDeleteButton.addEventListener("click", closeDeleteModal);
     confirmDeleteButton.addEventListener("click", deleteSlip);
+    sortableHeaders.forEach((header) => {
+        header.addEventListener("click", () => toggleSort(header.dataset.sortKey ?? ""));
+    });
 
     slipNoInput.addEventListener("keydown", (event) => {
         if (event.key === "Enter") {
@@ -337,18 +370,20 @@
                 throw new Error("検索に失敗しました。");
             }
 
-            renderRows(Array.isArray(data) ? data : []);
+            currentRows = Array.isArray(data) ? data : [];
+            renderRows();
             activeSearchLabel.textContent = isSlipMode
                 ? `検索対象: 伝票No ${value}`
                 : `検索対象: 品番 ${value}`;
 
-            if (data.length === 0) {
+            if (currentRows.length === 0) {
                 setMessage("該当データが見つかりませんでした。", "error");
             } else {
-                setMessage(`${data.length}件の明細を表示しました。`, "success");
+                setMessage(`${currentRows.length}件の明細を表示しました。`, "success");
             }
         } catch (error) {
-            renderRows([]);
+            currentRows = [];
+            renderRows();
             setMessage(error.message || "検索に失敗しました。", "error");
         } finally {
             setSearchButtonsDisabled(false);
@@ -416,7 +451,9 @@
                 throw new Error("削除に失敗しました。");
             }
 
-            renderRows([]);
+            currentRows = [];
+            resetSort();
+            renderRows();
             slipNoInput.value = "";
             codeInput.value = "";
             activeSearchLabel.textContent = "検索対象: 未選択";
@@ -429,7 +466,8 @@
         }
     }
 
-    function renderRows(rows) {
+    function renderRows() {
+        const rows = getSortedRows(currentRows);
         if (!rows.length) {
             resultMeta.textContent = "検索結果はまだありません。";
             resultTable.innerHTML = '<tr id="emptyRow"><td colspan="15" class="empty">検索結果がありません。</td></tr>';
@@ -462,6 +500,118 @@
                 <td><button type="button" class="row-action-button" onclick="editSlip('${escapeJs(row.slipNo ?? "")}')">編集</button></td>
             </tr>
         `).join("");
+    }
+
+    function toggleSort(sortKey) {
+        if (!sortKey || currentRows.length === 0) {
+            return;
+        }
+
+        if (currentSort.key === sortKey) {
+            currentSort.direction = currentSort.direction === "asc" ? "desc" : "asc";
+        } else {
+            currentSort.key = sortKey;
+            currentSort.direction = "asc";
+        }
+
+        updateSortIndicators();
+        renderRows();
+    }
+
+    function resetSort() {
+        currentSort.key = "";
+        currentSort.direction = "asc";
+        updateSortIndicators();
+    }
+
+    function updateSortIndicators() {
+        sortableHeaders.forEach((header) => {
+            if (header.dataset.sortKey === currentSort.key) {
+                header.dataset.sortDirection = currentSort.direction;
+            } else {
+                delete header.dataset.sortDirection;
+            }
+        });
+    }
+
+    function getSortedRows(rows) {
+        if (!currentSort.key) {
+            return rows;
+        }
+
+        const direction = currentSort.direction === "desc" ? -1 : 1;
+        return [...rows]
+            .map((row, index) => ({ row, index }))
+            .sort((left, right) => {
+                const compared = compareValues(left.row[currentSort.key], right.row[currentSort.key], currentSort.key);
+                if (compared !== 0) {
+                    return compared * direction;
+                }
+                return left.index - right.index;
+            })
+            .map((entry) => entry.row);
+    }
+
+    function compareValues(left, right, sortKey) {
+        if (sortKey === "returned") {
+            return compareBooleans(left, right);
+        }
+
+        if (["price", "taxPrice"].includes(sortKey)) {
+            return compareNumbers(left, right);
+        }
+
+        if (["releaseDate", "loanDate", "returnDate"].includes(sortKey)) {
+            return compareDates(left, right);
+        }
+
+        return compareStrings(left, right);
+    }
+
+    function compareBooleans(left, right) {
+        return normalizeBoolean(left) - normalizeBoolean(right);
+    }
+
+    function compareNumbers(left, right) {
+        const normalizedLeft = normalizeNumber(left);
+        const normalizedRight = normalizeNumber(right);
+        return normalizedLeft - normalizedRight;
+    }
+
+    function compareDates(left, right) {
+        const normalizedLeft = normalizeDate(left);
+        const normalizedRight = normalizeDate(right);
+        if (normalizedLeft === normalizedRight) {
+            return 0;
+        }
+        return normalizedLeft < normalizedRight ? -1 : 1;
+    }
+
+    function compareStrings(left, right) {
+        const normalizedLeft = normalizeString(left);
+        const normalizedRight = normalizeString(right);
+        return normalizedLeft.localeCompare(normalizedRight, "ja");
+    }
+
+    function normalizeBoolean(value) {
+        return value ? 1 : 0;
+    }
+
+    function normalizeNumber(value) {
+        const parsed = Number(value);
+        return Number.isFinite(parsed) ? parsed : Number.NEGATIVE_INFINITY;
+    }
+
+    function normalizeDate(value) {
+        if (!value) {
+            return "";
+        }
+        const parsed = Date.parse(String(value));
+        return Number.isNaN(parsed) ? String(value) : parsed;
+    }
+
+    function normalizeString(value) {
+        return String(value ?? "").trim();
     }
 
     function resolveDeletableSlipNo() {
