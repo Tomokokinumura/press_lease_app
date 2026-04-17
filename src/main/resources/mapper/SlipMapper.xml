@@ -5,10 +5,12 @@
 
 <mapper namespace="com.example.demo.mapper.SlipMapper">
 
-    <select id="countByMonth" resultType="int">
-        SELECT COUNT(*)
+    <select id="findLatestSlipNoByMonth" resultType="string">
+        SELECT slip_no
         FROM slip
         WHERE slip_no LIKE CONCAT(#{ym}, '%')
+        ORDER BY slip_no DESC
+        LIMIT 1
     </select>
 
     <insert id="insert" parameterType="com.example.demo.entity.Slip" useGeneratedKeys="true" keyProperty="id" keyColumn="id">

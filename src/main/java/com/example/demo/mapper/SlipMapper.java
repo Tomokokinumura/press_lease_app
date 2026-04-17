@@ -6,7 +6,7 @@ import com.example.demo.entity.Slip;
 
 public interface SlipMapper {
 
-    Integer countByMonth(@Param("ym") String ym);
+    String findLatestSlipNoByMonth(@Param("ym") String ym);
 
     void insert(Slip slip);
 

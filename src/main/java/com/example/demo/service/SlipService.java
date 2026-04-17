@@ -29,6 +29,7 @@ import com.example.demo.mapper.SlipMapper;
 public class SlipService {
 
     private static final int MAX_DETAIL_COUNT = 10;
+    private static final int MAX_MONTHLY_SLIP_SEQUENCE = 999;
     private static final DateTimeFormatter SLIP_NO_FORMATTER = DateTimeFormatter.ofPattern("yyyyMM");
     private static final String CREATE_SLIP_TABLE_SQL = """
             CREATE TABLE IF NOT EXISTS slip (
@@ -97,8 +98,8 @@ public class SlipService {
 
     public String generateSlipNo() {
         String ym = LocalDate.now().format(SLIP_NO_FORMATTER);
-        Integer count = slipMapper.countByMonth(ym);
-        int next = (count == null ? 1 : count + 1);
+        String latestSlipNo = slipMapper.findLatestSlipNoByMonth(ym);
+        int next = extractNextSequence(ym, latestSlipNo);
         return ym + String.format("%03d", next);
     }
 
@@ -343,5 +344,29 @@ public class SlipService {
 
     private String buildPlannedLabel(int index) {
         return String.valueOf((char) ('A' + index));
+    }
+
+    private int extractNextSequence(String ym, String latestSlipNo) {
+        if (!hasText(latestSlipNo) || latestSlipNo.length() < ym.length() + 3) {
+            return 1;
+        }
+
+        String sequencePart = latestSlipNo.substring(ym.length());
+        int currentSequence;
+        try {
+            currentSequence = Integer.parseInt(sequencePart);
+        } catch (NumberFormatException ex) {
+            throw new ResponseStatusException(
+                    HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Failed to parse the latest slip number: " + latestSlipNo);
+        }
+
+        if (currentSequence >= MAX_MONTHLY_SLIP_SEQUENCE) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Monthly slip number limit reached for " + ym + ".");
+        }
+
+        return currentSequence + 1;
     }
 }
