@@ -123,6 +123,16 @@
         .search-block, .media-block { display: grid; gap: 12px; }
         .search-row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
         .search-row input { width: min(360px, 100%); font-size: 18px; letter-spacing: 0.08em; }
+        .code-action-buttons {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .code-action-buttons button {
+            min-width: 84px;
+            cursor: pointer;
+            font-weight: 700;
+        }
         .hint, #message, .meta-note { color: var(--muted); font-size: 14px; }
         #message[data-state="error"] { color: #b42318; }
         #message[data-state="success"] { color: #1d6f42; }
@@ -260,11 +270,15 @@
         <label for="codeInput">品番</label>
         <div class="search-row">
             <input type="text" id="codeInput" inputmode="numeric" placeholder="品番を入力（8桁）" maxlength="8" autocomplete="off">
+            <div class="code-action-buttons">
+                <button type="button" id="addCodeButton" class="secondary">追加</button>
+                <button type="button" id="clearCodeButton" class="secondary">クリア</button>
+            </div>
             <span class="hint">8桁の半角数字を入力して Enter を押すと、Google Sheets から明細を追加します。</span>
         </div>
         <div id="message" aria-live="polite"></div>
         <div class="action-buttons">
-            <button type="button" id="exportButton" class="secondary">出力</button>
+            <button type="button" id="exportButton" class="secondary">伝票出力</button>
             <button type="button" id="saveButton" class="primary">保存</button>
         </div>
     </section>
@@ -280,11 +294,12 @@
                     <th>税込価格</th>
                     <th>クレジット</th>
                     <th>明細備考</th>
+                    <th>操作</th>
                 </tr>
                 </thead>
                 <tbody id="resultTable">
                 <tr id="emptyRow">
-                    <td class="empty" colspan="6">品番を入力して Enter を押すと、ここに明細が追加されます。</td>
+                    <td class="empty" colspan="7">品番を入力して Enter を押すと、ここに明細が追加されます。</td>
                 </tr>
                 </tbody>
             </table>
@@ -307,6 +322,8 @@
     const emptyRowId = "emptyRow";
     const saveButton = document.getElementById("saveButton");
     const exportButton = document.getElementById("exportButton");
+    const addCodeButton = document.getElementById("addCodeButton");
+    const clearCodeButton = document.getElementById("clearCodeButton");
     const addMediaRowButton = document.getElementById("addMediaRowButton");
     const loadSlipButton = document.getElementById("loadSlipButton");
     const mediaRows = document.getElementById("mediaRows");
@@ -342,35 +359,11 @@
             return;
         }
         event.preventDefault();
-        const code = this.value.trim();
-
-        if (!/^\d{8}$/.test(code)) {
-            setMessage("品番は8桁の半角数字で入力してください。", "error");
-            return;
-        }
-
-        if (document.querySelectorAll("#resultTable tr[data-detail-row='true']").length >= maxRows) {
-            setMessage("明細は最大10行まで追加できます。", "error");
-            return;
-        }
-
-        setMessage("検索中です...", "");
-
-        try {
-            const response = await fetch(`/api/search?code=${encodeURIComponent(code)}`);
-            const data = await response.json().catch(() => ({}));
-            if (!response.ok) {
-                throw new Error(data.message || "検索に失敗しました。");
-            }
-            appendResultRow(data);
-            this.value = "";
-            this.focus();
-            setMessage(`${code} を追加しました。`, "success");
-        } catch (error) {
-            setMessage(error.message || "検索に失敗しました。", "error");
-        }
+        await addCodeDetail();
     });
 
+    addCodeButton.addEventListener("click", addCodeDetail);
+    clearCodeButton.addEventListener("click", clearCodeInput);
     addMediaRowButton.addEventListener("click", () => {
         if (mediaRows.querySelectorAll("[data-media-row='true']").length >= maxRows) {
             setMessage("媒体情報は最大10行まで追加できます。", "error");
@@ -494,7 +487,7 @@
         if (details.length) {
             details.forEach((detail) => appendExistingDetailRow(detail));
         } else {
-            resultTable.innerHTML = `<tr id="${emptyRowId}"><td class="empty" colspan="6">品番を入力して Enter を押すと、ここに明細が追加されます。</td></tr>`;
+            resultTable.innerHTML = `<tr id="${emptyRowId}"><td class="empty" colspan="7">品番を入力して Enter を押すと、ここに明細が追加されます。</td></tr>`;
         }
     }
 
@@ -523,9 +516,60 @@
             <td><input type="text" data-detail-tax-price value="${escapeHtml(String(values.taxPrice ?? ""))}"></td>
             <td><input type="text" data-detail-credit value="${escapeHtml(values.credit ?? "")}"></td>
             <td><input type="text" data-detail-note value="${escapeHtml(values.note ?? "")}"></td>
+            <td><button type="button" class="secondary" data-remove-detail>削除</button></td>
         `;
+        row.querySelector("[data-remove-detail]").addEventListener("click", () => {
+            row.remove();
+            ensureEmptyDetailRow();
+        });
         resultTable.appendChild(row);
     }
+
+    function ensureEmptyDetailRow() {
+        if (document.querySelectorAll("#resultTable tr[data-detail-row='true']").length > 0) {
+            return;
+        }
+        resultTable.innerHTML = `<tr id="${emptyRowId}"><td class="empty" colspan="7">品番を入力して Enter を押すと、ここに明細が追加されます。</td></tr>`;
+    }
+
+    async function addCodeDetail() {
+        const code = codeInput.value.trim();
+
+        if (!/^\d{8}$/.test(code)) {
+            setMessage("品番は8桁の半角数字で入力してください。", "error");
+            return;
+        }
+
+        if (document.querySelectorAll("#resultTable tr[data-detail-row='true']").length >= maxRows) {
+            setMessage("明細は最大10行まで追加できます。", "error");
+            return;
+        }
+
+        setMessage("検索中です...", "");
+        addCodeButton.disabled = true;
+
+        try {
+            const response = await fetch(`/api/search?code=${encodeURIComponent(code)}`);
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+                throw new Error(data.message || "検索に失敗しました。");
+            }
+            appendResultRow(data);
+            codeInput.value = "";
+            codeInput.focus();
+            setMessage(`${code} を追加しました。`, "success");
+        } catch (error) {
+            setMessage(error.message || "検索に失敗しました。", "error");
+        } finally {
+            addCodeButton.disabled = false;
+        }
+    }
+
+    function clearCodeInput() {
+        codeInput.value = "";
+        codeInput.focus();
+    }
+
     async function saveSlip() {
         const payload = buildSlipPayload();
         if (!payload) {
