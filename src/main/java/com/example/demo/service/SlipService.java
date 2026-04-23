@@ -131,19 +131,31 @@ public class SlipService {
     }
 
     public List<SlipDetailDto> findBySlipNo(String slipNo) {
+        return findBySlipNo(slipNo, null, null);
+    }
+
+    public List<SlipDetailDto> findBySlipNo(String slipNo, LocalDate loanDateFrom, LocalDate loanDateTo) {
         ensureSlipTables();
         if (!hasText(slipNo)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Slip number is required.");
         }
-        return enrichWithMediaRows(slipDetailMapper.findSlipRowsBySlipNo(slipNo.trim()));
+        validateLoanDateRange(loanDateFrom, loanDateTo);
+        return enrichWithMediaRows(
+                slipDetailMapper.findSlipRowsBySlipNoWithLoanDateRange(slipNo.trim(), loanDateFrom, loanDateTo));
     }
 
     public List<SlipDetailDto> findByCode(String code) {
+        return findByCode(code, null, null);
+    }
+
+    public List<SlipDetailDto> findByCode(String code, LocalDate loanDateFrom, LocalDate loanDateTo) {
         ensureSlipTables();
         if (!hasText(code)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Code is required.");
         }
-        return enrichWithMediaRows(slipDetailMapper.findSlipRowsByCode(code.trim()));
+        validateLoanDateRange(loanDateFrom, loanDateTo);
+        return enrichWithMediaRows(
+                slipDetailMapper.findSlipRowsByCodeWithLoanDateRange(code.trim(), loanDateFrom, loanDateTo));
     }
 
     public SlipEditResponse loadSlipForEdit(String slipNo) {
@@ -253,6 +265,12 @@ public class SlipService {
 
     private boolean hasText(String value) {
         return value != null && !value.isBlank();
+    }
+
+    private void validateLoanDateRange(LocalDate loanDateFrom, LocalDate loanDateTo) {
+        if (loanDateFrom != null && loanDateTo != null && loanDateFrom.isAfter(loanDateTo)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Loan date range is invalid.");
+        }
     }
 
     private boolean hasMeaningfulMedia(SlipMedia media) {

@@ -94,13 +94,18 @@ public class SlipExcelService {
         response.flushBuffer();
     }
 
-    public void exportRawSlip(String slipNo, HttpServletResponse response) throws IOException {
+    public void exportRawSlip(
+            String slipNo,
+            LocalDate loanDateFrom,
+            LocalDate loanDateTo,
+            HttpServletResponse response) throws IOException {
         Slip slip = slipMapper.findBySlipNo(slipNo);
         if (slip == null) {
             throw new ResponseStatusException(NOT_FOUND, "Slip not found: " + slipNo);
         }
 
-        List<SlipDetailDto> rows = enrichRowsWithMedia(slipDetailMapper.findSlipRowsBySlipNo(slipNo));
+        List<SlipDetailDto> rows = enrichRowsWithMedia(
+                slipDetailMapper.findSlipRowsBySlipNoWithLoanDateRange(slipNo, loanDateFrom, loanDateTo));
 
         byte[] bytes = renderRawWorkbook(rows);
 
@@ -112,8 +117,13 @@ public class SlipExcelService {
         response.flushBuffer();
     }
 
-    public void exportRawByCode(String code, HttpServletResponse response) throws IOException {
-        List<SlipDetailDto> rows = enrichRowsWithMedia(slipDetailMapper.findSlipRowsByCode(code));
+    public void exportRawByCode(
+            String code,
+            LocalDate loanDateFrom,
+            LocalDate loanDateTo,
+            HttpServletResponse response) throws IOException {
+        List<SlipDetailDto> rows = enrichRowsWithMedia(
+                slipDetailMapper.findSlipRowsByCodeWithLoanDateRange(code, loanDateFrom, loanDateTo));
         if (rows.isEmpty()) {
             throw new ResponseStatusException(NOT_FOUND, "No rows found for code: " + code);
         }

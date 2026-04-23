@@ -1,5 +1,6 @@
 package com.example.demo.mapper;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import org.apache.ibatis.annotations.Param;
@@ -17,7 +18,17 @@ public interface SlipDetailMapper {
 
     List<SlipDetailDto> findSlipRowsBySlipNo(@Param("slipNo") String slipNo);
 
+    List<SlipDetailDto> findSlipRowsBySlipNoWithLoanDateRange(
+            @Param("slipNo") String slipNo,
+            @Param("loanDateFrom") LocalDate loanDateFrom,
+            @Param("loanDateTo") LocalDate loanDateTo);
+
     List<SlipDetailDto> findSlipRowsByCode(@Param("code") String code);
+
+    List<SlipDetailDto> findSlipRowsByCodeWithLoanDateRange(
+            @Param("code") String code,
+            @Param("loanDateFrom") LocalDate loanDateFrom,
+            @Param("loanDateTo") LocalDate loanDateTo);
 
     void updateDetail(SlipDetailDto detail);
 

@@ -105,6 +105,28 @@
             border-radius: 18px;
             background: #fffdfa;
         }
+        .date-range {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr auto;
+            gap: 8px;
+            align-items: center;
+        }
+        .date-separator {
+            color: var(--muted);
+            font-weight: 700;
+            text-align: center;
+        }
+        .copy-date-button {
+            padding: 10px 12px;
+            background: var(--surface);
+            color: var(--text);
+            white-space: nowrap;
+        }
+        .field-note {
+            margin: 0;
+            color: var(--muted);
+            font-size: 13px;
+        }
         label { font-size: 14px; font-weight: 700; }
         input, button { font: inherit; }
         input[type="text"], input[type="date"] {
@@ -233,11 +255,27 @@
             <div class="search-card">
                 <label for="slipNoInput">伝票No検索</label>
                 <input type="text" id="slipNoInput" placeholder="例: 202604001" autocomplete="off">
+                <label for="slipLoanDateFrom">貸出日範囲</label>
+                <div class="date-range">
+                    <input type="text" id="slipLoanDateFrom" inputmode="numeric" maxlength="8" placeholder="yyyymmdd" autocomplete="off">
+                    <span class="date-separator">～</span>
+                    <input type="text" id="slipLoanDateTo" inputmode="numeric" maxlength="8" placeholder="yyyymmdd" autocomplete="off">
+                    <button type="button" class="copy-date-button" data-copy-from="slipLoanDateFrom" data-copy-to="slipLoanDateTo">左をコピー</button>
+                </div>
+                <p class="field-note">貸出日で絞り込みます。空欄なら日付条件なしです。</p>
                 <button type="button" id="searchSlipButton" class="secondary">伝票Noで検索</button>
             </div>
             <div class="search-card">
                 <label for="codeInput">品番検索</label>
                 <input type="text" id="codeInput" placeholder="例: 12345678" autocomplete="off">
+                <label for="codeLoanDateFrom">貸出日範囲</label>
+                <div class="date-range">
+                    <input type="text" id="codeLoanDateFrom" inputmode="numeric" maxlength="8" placeholder="yyyymmdd" autocomplete="off">
+                    <span class="date-separator">～</span>
+                    <input type="text" id="codeLoanDateTo" inputmode="numeric" maxlength="8" placeholder="yyyymmdd" autocomplete="off">
+                    <button type="button" class="copy-date-button" data-copy-from="codeLoanDateFrom" data-copy-to="codeLoanDateTo">左をコピー</button>
+                </div>
+                <p class="field-note">貸出日で絞り込みます。空欄なら日付条件なしです。</p>
                 <button type="button" id="searchCodeButton" class="secondary">品番で検索</button>
             </div>
         </div>
@@ -297,6 +335,10 @@
 <script>
     const slipNoInput = document.getElementById("slipNoInput");
     const codeInput = document.getElementById("codeInput");
+    const slipLoanDateFromInput = document.getElementById("slipLoanDateFrom");
+    const slipLoanDateToInput = document.getElementById("slipLoanDateTo");
+    const codeLoanDateFromInput = document.getElementById("codeLoanDateFrom");
+    const codeLoanDateToInput = document.getElementById("codeLoanDateTo");
     const searchSlipButton = document.getElementById("searchSlipButton");
     const searchCodeButton = document.getElementById("searchCodeButton");
     const downloadButton = document.getElementById("downloadButton");
@@ -310,6 +352,7 @@
     const cancelDeleteButton = document.getElementById("cancelDeleteButton");
     const confirmDeleteButton = document.getElementById("confirmDeleteButton");
     const sortableHeaders = Array.from(document.querySelectorAll("th.sortable"));
+    const copyDateButtons = Array.from(document.querySelectorAll(".copy-date-button"));
 
     let currentMode = "";
     let currentRows = [];
@@ -326,6 +369,15 @@
     confirmDeleteButton.addEventListener("click", deleteSlip);
     sortableHeaders.forEach((header) => {
         header.addEventListener("click", () => toggleSort(header.dataset.sortKey ?? ""));
+    });
+    copyDateButtons.forEach((button) => {
+        button.addEventListener("click", () => copyDateValue(button.dataset.copyFrom, button.dataset.copyTo));
+    });
+
+    [slipLoanDateFromInput, slipLoanDateToInput, codeLoanDateFromInput, codeLoanDateToInput].forEach((input) => {
+        input.addEventListener("input", () => {
+            input.value = normalizeDateInputValue(input.value);
+        });
     });
 
     slipNoInput.addEventListener("keydown", (event) => {
@@ -351,8 +403,13 @@
     async function runSearch(mode) {
         const isSlipMode = mode === "slip";
         const value = (isSlipMode ? slipNoInput.value : codeInput.value).trim();
+        const dateRange = getDateRangeParams(isSlipMode ? "slip" : "code");
         if (!value) {
             setMessage(isSlipMode ? "伝票Noを入力してください。" : "品番を入力してください。", "error");
+            return;
+        }
+        if (!dateRange.ok) {
+            setMessage(dateRange.message, "error");
             return;
         }
 
@@ -361,9 +418,14 @@
         setSearchButtonsDisabled(true);
 
         try {
-            const url = isSlipMode
-                ? `/api/slip?slipNo=${encodeURIComponent(value)}`
-                : `/api/slip/code?code=${encodeURIComponent(value)}`;
+            const params = new URLSearchParams(isSlipMode ? { slipNo: value } : { code: value });
+            if (dateRange.loanDateFrom) {
+                params.set("loanDateFrom", dateRange.loanDateFrom);
+            }
+            if (dateRange.loanDateTo) {
+                params.set("loanDateTo", dateRange.loanDateTo);
+            }
+            const url = isSlipMode ? `/api/slip?${params.toString()}` : `/api/slip/code?${params.toString()}`;
             const response = await fetch(url);
             const data = await response.json().catch(() => []);
             if (!response.ok) {
@@ -372,9 +434,7 @@
 
             currentRows = Array.isArray(data) ? data : [];
             renderRows();
-            activeSearchLabel.textContent = isSlipMode
-                ? `検索対象: 伝票No ${value}`
-                : `検索対象: 品番 ${value}`;
+            activeSearchLabel.textContent = buildActiveSearchLabel(mode, value, dateRange);
 
             if (currentRows.length === 0) {
                 setMessage("該当データが見つかりませんでした。", "error");
@@ -410,21 +470,31 @@
     function downloadExcel() {
         if (currentMode === "slip") {
             const slipNo = resolveDeletableSlipNo() || slipNoInput.value.trim();
+            const dateRange = getDateRangeParams("slip");
             if (!slipNo) {
                 setMessage("Excel出力する伝票Noを入力してください。", "error");
                 return;
             }
-            window.location.href = `/excel/export/raw/${encodeURIComponent(slipNo)}`;
+            if (!dateRange.ok) {
+                setMessage(dateRange.message, "error");
+                return;
+            }
+            window.location.href = buildExcelDownloadUrl(`/excel/export/raw/${encodeURIComponent(slipNo)}`, dateRange);
             return;
         }
 
         if (currentMode === "code") {
             const code = codeInput.value.trim();
+            const dateRange = getDateRangeParams("code");
             if (!code) {
                 setMessage("Excel出力する品番を入力してください。", "error");
                 return;
             }
-            window.location.href = `/excel/export/raw/code/${encodeURIComponent(code)}`;
+            if (!dateRange.ok) {
+                setMessage(dateRange.message, "error");
+                return;
+            }
+            window.location.href = buildExcelDownloadUrl(`/excel/export/raw/code/${encodeURIComponent(code)}`, dateRange);
             return;
         }
 
@@ -456,6 +526,10 @@
             renderRows();
             slipNoInput.value = "";
             codeInput.value = "";
+            slipLoanDateFromInput.value = "";
+            slipLoanDateToInput.value = "";
+            codeLoanDateFromInput.value = "";
+            codeLoanDateToInput.value = "";
             activeSearchLabel.textContent = "検索対象: 未選択";
             setMessage(`伝票No.${slipNo} を削除しました。`, "success");
             closeDeleteModal();
@@ -623,6 +697,92 @@
     function setSearchButtonsDisabled(disabled) {
         searchSlipButton.disabled = disabled;
         searchCodeButton.disabled = disabled;
+    }
+
+    function getDateRangeParams(mode) {
+        const fromInput = mode === "slip" ? slipLoanDateFromInput : codeLoanDateFromInput;
+        const toInput = mode === "slip" ? slipLoanDateToInput : codeLoanDateToInput;
+        const fromDigits = normalizeDateInputValue(fromInput.value);
+        const toDigits = normalizeDateInputValue(toInput.value);
+        fromInput.value = fromDigits;
+        toInput.value = toDigits;
+
+        if (fromDigits && fromDigits.length !== 8) {
+            return { ok: false, message: "開始日は yyyymmdd で入力してください。" };
+        }
+        if (toDigits && toDigits.length !== 8) {
+            return { ok: false, message: "終了日は yyyymmdd で入力してください。" };
+        }
+
+        const loanDateFrom = fromDigits ? toIsoDate(fromDigits) : "";
+        const loanDateTo = toDigits ? toIsoDate(toDigits) : "";
+        if ((fromDigits && !loanDateFrom) || (toDigits && !loanDateTo)) {
+            return { ok: false, message: "存在する日付を yyyymmdd で入力してください。" };
+        }
+        if (loanDateFrom && loanDateTo && loanDateFrom > loanDateTo) {
+            return { ok: false, message: "日付範囲が逆になっています。" };
+        }
+
+        return {
+            ok: true,
+            loanDateFrom,
+            loanDateTo,
+            fromLabel: fromDigits,
+            toLabel: toDigits
+        };
+    }
+
+    function normalizeDateInputValue(value) {
+        return String(value ?? "").replace(/\D/g, "").slice(0, 8);
+    }
+
+    function toIsoDate(value) {
+        if (!/^\d{8}$/.test(value)) {
+            return "";
+        }
+        const year = Number(value.slice(0, 4));
+        const month = Number(value.slice(4, 6));
+        const day = Number(value.slice(6, 8));
+        const date = new Date(year, month - 1, day);
+        if (
+            Number.isNaN(date.getTime())
+            || date.getFullYear() !== year
+            || date.getMonth() !== month - 1
+            || date.getDate() !== day
+        ) {
+            return "";
+        }
+        return `${value.slice(0, 4)}-${value.slice(4, 6)}-${value.slice(6, 8)}`;
+    }
+
+    function copyDateValue(fromId, toId) {
+        const fromInput = document.getElementById(fromId);
+        const toInput = document.getElementById(toId);
+        if (!fromInput || !toInput) {
+            return;
+        }
+        toInput.value = normalizeDateInputValue(fromInput.value);
+        toInput.focus();
+    }
+
+    function buildActiveSearchLabel(mode, value, dateRange) {
+        const baseLabel = mode === "slip" ? `検索対象: 伝票No ${value}` : `検索対象: 品番 ${value}`;
+        if (!dateRange.fromLabel && !dateRange.toLabel) {
+            return baseLabel;
+        }
+        return `${baseLabel} / 貸出日 ${dateRange.fromLabel || "開始なし"} ～ ${dateRange.toLabel || "終了なし"}`;
+    }
+
+    function buildExcelDownloadUrl(baseUrl, dateRange) {
+        const params = new URLSearchParams();
+        if (dateRange.loanDateFrom) {
+            params.set("loanDateFrom", dateRange.loanDateFrom);
+        }
+        if (dateRange.loanDateTo) {
+            params.set("loanDateTo", dateRange.loanDateTo);
+        }
+        const query = params.toString();
+        return query ? `${baseUrl}?${query}` : baseUrl;
     }
 
     function formatNumber(value) {

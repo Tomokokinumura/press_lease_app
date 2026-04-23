@@ -1,7 +1,9 @@
 package com.example.demo.controller;
 
+import java.time.LocalDate;
 import java.util.List;
 
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -24,13 +26,19 @@ public class SlipSearchApiController {
     }
 
     @GetMapping
-    public List<SlipDetailDto> getSlip(@RequestParam String slipNo) {
-        return slipService.findBySlipNo(slipNo);
+    public List<SlipDetailDto> getSlip(
+            @RequestParam String slipNo,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate loanDateFrom,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate loanDateTo) {
+        return slipService.findBySlipNo(slipNo, loanDateFrom, loanDateTo);
     }
 
     @GetMapping("/code")
-    public List<SlipDetailDto> searchByCode(@RequestParam String code) {
-        return slipService.findByCode(code);
+    public List<SlipDetailDto> searchByCode(
+            @RequestParam String code,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate loanDateFrom,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate loanDateTo) {
+        return slipService.findByCode(code, loanDateFrom, loanDateTo);
     }
 
     @GetMapping("/edit")

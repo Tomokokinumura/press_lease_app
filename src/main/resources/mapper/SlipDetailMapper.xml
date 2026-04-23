@@ -104,6 +104,36 @@
         ORDER BY d.id
     </select>
 
+    <select id="findSlipRowsBySlipNoWithLoanDateRange" resultMap="slipDetailDtoResultMap">
+        SELECT s.id AS slipId,
+               s.slip_no AS slipNo,
+               s.staff_name AS staffName,
+               s.customer_name AS customerName,
+               s.loan_date AS loanDate,
+               s.return_date AS returnDate,
+               d.id,
+               d.code,
+               d.name,
+               d.price,
+               d.tax_price AS taxPrice,
+               d.credit,
+               d.planned_label AS plannedLabel,
+               d.media_name AS mediaName,
+               d.release_date AS releaseDate,
+               d.note,
+               d.returned
+        FROM slip s
+        JOIN slip_detail d ON s.id = d.slip_id
+        WHERE s.slip_no LIKE CONCAT(#{slipNo}, '%')
+        <if test="loanDateFrom != null">
+            AND s.loan_date <![CDATA[ >= ]]> #{loanDateFrom}
+        </if>
+        <if test="loanDateTo != null">
+            AND s.loan_date <![CDATA[ <= ]]> #{loanDateTo}
+        </if>
+        ORDER BY d.id
+    </select>
+
     <select id="findSlipRowsByCode" resultMap="slipDetailDtoResultMap">
         SELECT s.id AS slipId,
                s.slip_no AS slipNo,
@@ -125,6 +155,36 @@
         FROM slip s
         JOIN slip_detail d ON s.id = d.slip_id
         WHERE d.code LIKE CONCAT(#{code}, '%')
+        ORDER BY s.slip_no, d.id
+    </select>
+
+    <select id="findSlipRowsByCodeWithLoanDateRange" resultMap="slipDetailDtoResultMap">
+        SELECT s.id AS slipId,
+               s.slip_no AS slipNo,
+               s.staff_name AS staffName,
+               s.customer_name AS customerName,
+               s.loan_date AS loanDate,
+               s.return_date AS returnDate,
+               d.id,
+               d.code,
+               d.name,
+               d.price,
+               d.tax_price AS taxPrice,
+               d.credit,
+               d.planned_label AS plannedLabel,
+               d.media_name AS mediaName,
+               d.release_date AS releaseDate,
+               d.note,
+               d.returned
+        FROM slip s
+        JOIN slip_detail d ON s.id = d.slip_id
+        WHERE d.code LIKE CONCAT(#{code}, '%')
+        <if test="loanDateFrom != null">
+            AND s.loan_date <![CDATA[ >= ]]> #{loanDateFrom}
+        </if>
+        <if test="loanDateTo != null">
+            AND s.loan_date <![CDATA[ <= ]]> #{loanDateTo}
+        </if>
         ORDER BY s.slip_no, d.id
     </select>
 
