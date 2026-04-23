@@ -27,7 +27,7 @@ public class SlipSearchApiController {
 
     @GetMapping
     public List<SlipDetailDto> getSlip(
-            @RequestParam String slipNo,
+            @RequestParam(required = false) String slipNo,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate loanDateFrom,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate loanDateTo) {
         return slipService.findBySlipNo(slipNo, loanDateFrom, loanDateTo);
@@ -35,7 +35,7 @@ public class SlipSearchApiController {
 
     @GetMapping("/code")
     public List<SlipDetailDto> searchByCode(
-            @RequestParam String code,
+            @RequestParam(required = false) String code,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate loanDateFrom,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate loanDateTo) {
         return slipService.findByCode(code, loanDateFrom, loanDateTo);

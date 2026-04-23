@@ -136,12 +136,10 @@ public class SlipService {
 
     public List<SlipDetailDto> findBySlipNo(String slipNo, LocalDate loanDateFrom, LocalDate loanDateTo) {
         ensureSlipTables();
-        if (!hasText(slipNo)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Slip number is required.");
-        }
+        validateSearchCriteria(slipNo, loanDateFrom, loanDateTo, "Slip number");
         validateLoanDateRange(loanDateFrom, loanDateTo);
         return enrichWithMediaRows(
-                slipDetailMapper.findSlipRowsBySlipNoWithLoanDateRange(slipNo.trim(), loanDateFrom, loanDateTo));
+                slipDetailMapper.findSlipRowsBySlipNoWithLoanDateRange(normalizeSearchText(slipNo), loanDateFrom, loanDateTo));
     }
 
     public List<SlipDetailDto> findByCode(String code) {
@@ -150,12 +148,10 @@ public class SlipService {
 
     public List<SlipDetailDto> findByCode(String code, LocalDate loanDateFrom, LocalDate loanDateTo) {
         ensureSlipTables();
-        if (!hasText(code)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Code is required.");
-        }
+        validateSearchCriteria(code, loanDateFrom, loanDateTo, "Code");
         validateLoanDateRange(loanDateFrom, loanDateTo);
         return enrichWithMediaRows(
-                slipDetailMapper.findSlipRowsByCodeWithLoanDateRange(code.trim(), loanDateFrom, loanDateTo));
+                slipDetailMapper.findSlipRowsByCodeWithLoanDateRange(normalizeSearchText(code), loanDateFrom, loanDateTo));
     }
 
     public SlipEditResponse loadSlipForEdit(String slipNo) {
@@ -265,6 +261,18 @@ public class SlipService {
 
     private boolean hasText(String value) {
         return value != null && !value.isBlank();
+    }
+
+    private String normalizeSearchText(String value) {
+        return hasText(value) ? value.trim() : null;
+    }
+
+    private void validateSearchCriteria(String text, LocalDate loanDateFrom, LocalDate loanDateTo, String fieldLabel) {
+        if (!hasText(text) && loanDateFrom == null && loanDateTo == null) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    fieldLabel + " or loan date range is required.");
+        }
     }
 
     private void validateLoanDateRange(LocalDate loanDateFrom, LocalDate loanDateTo) {

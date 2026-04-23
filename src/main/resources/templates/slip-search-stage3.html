@@ -247,7 +247,7 @@
             <a href="/master" class="tab-link is-master">マスタ変更</a>
         </nav>
         <h1>伝票検索</h1>
-        <p class="intro">伝票Noまたは品番で保存済みデータを検索し、伝票単位で編集画面へ移動できます。返却済みの明細は状態欄に表示されます。</p>
+        <p class="intro">伝票Noまたは品番、または貸出日範囲だけでも保存済みデータを検索できます。返却済みの明細は状態欄に表示され、伝票単位で編集画面へ移動できます。</p>
     </section>
 
     <section class="panel">
@@ -262,7 +262,7 @@
                     <input type="text" id="slipLoanDateTo" inputmode="numeric" maxlength="8" placeholder="yyyymmdd" autocomplete="off">
                     <button type="button" class="copy-date-button" data-copy-from="slipLoanDateFrom" data-copy-to="slipLoanDateTo">左をコピー</button>
                 </div>
-                <p class="field-note">貸出日で絞り込みます。空欄なら日付条件なしです。</p>
+                <p class="field-note">伝票Noが空でも、貸出日範囲だけで検索できます。空欄なら日付条件なしです。</p>
                 <button type="button" id="searchSlipButton" class="secondary">伝票Noで検索</button>
             </div>
             <div class="search-card">
@@ -275,7 +275,7 @@
                     <input type="text" id="codeLoanDateTo" inputmode="numeric" maxlength="8" placeholder="yyyymmdd" autocomplete="off">
                     <button type="button" class="copy-date-button" data-copy-from="codeLoanDateFrom" data-copy-to="codeLoanDateTo">左をコピー</button>
                 </div>
-                <p class="field-note">貸出日で絞り込みます。空欄なら日付条件なしです。</p>
+                <p class="field-note">品番が空でも、貸出日範囲だけで検索できます。空欄なら日付条件なしです。</p>
                 <button type="button" id="searchCodeButton" class="secondary">品番で検索</button>
             </div>
         </div>
@@ -313,7 +313,7 @@
                 </thead>
                 <tbody id="resultTable">
                 <tr id="emptyRow">
-                    <td colspan="15" class="empty">伝票Noまたは品番を入力して検索してください。</td>
+                    <td colspan="15" class="empty">伝票No・品番・貸出日範囲のいずれかを指定して検索してください。</td>
                 </tr>
                 </tbody>
             </table>
@@ -404,12 +404,14 @@
         const isSlipMode = mode === "slip";
         const value = (isSlipMode ? slipNoInput.value : codeInput.value).trim();
         const dateRange = getDateRangeParams(isSlipMode ? "slip" : "code");
-        if (!value) {
-            setMessage(isSlipMode ? "伝票Noを入力してください。" : "品番を入力してください。", "error");
-            return;
-        }
         if (!dateRange.ok) {
             setMessage(dateRange.message, "error");
+            return;
+        }
+        if (!value && !dateRange.loanDateFrom && !dateRange.loanDateTo) {
+            setMessage(isSlipMode
+                ? "伝票Noまたは貸出日範囲を入力してください。"
+                : "品番または貸出日範囲を入力してください。", "error");
             return;
         }
 
@@ -418,7 +420,10 @@
         setSearchButtonsDisabled(true);
 
         try {
-            const params = new URLSearchParams(isSlipMode ? { slipNo: value } : { code: value });
+            const params = new URLSearchParams();
+            if (value) {
+                params.set(isSlipMode ? "slipNo" : "code", value);
+            }
             if (dateRange.loanDateFrom) {
                 params.set("loanDateFrom", dateRange.loanDateFrom);
             }
@@ -766,7 +771,9 @@
     }
 
     function buildActiveSearchLabel(mode, value, dateRange) {
-        const baseLabel = mode === "slip" ? `検索対象: 伝票No ${value}` : `検索対象: 品番 ${value}`;
+        const baseLabel = mode === "slip"
+            ? `検索対象: ${value ? `伝票No ${value}` : "貸出日検索"}`
+            : `検索対象: ${value ? `品番 ${value}` : "貸出日検索"}`;
         if (!dateRange.fromLabel && !dateRange.toLabel) {
             return baseLabel;
         }

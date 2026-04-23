@@ -124,13 +124,17 @@
                d.returned
         FROM slip s
         JOIN slip_detail d ON s.id = d.slip_id
-        WHERE s.slip_no LIKE CONCAT(#{slipNo}, '%')
-        <if test="loanDateFrom != null">
-            AND s.loan_date <![CDATA[ >= ]]> #{loanDateFrom}
-        </if>
-        <if test="loanDateTo != null">
-            AND s.loan_date <![CDATA[ <= ]]> #{loanDateTo}
-        </if>
+        <where>
+            <if test="slipNo != null and slipNo != ''">
+                s.slip_no LIKE CONCAT(#{slipNo}, '%')
+            </if>
+            <if test="loanDateFrom != null">
+                AND s.loan_date <![CDATA[ >= ]]> #{loanDateFrom}
+            </if>
+            <if test="loanDateTo != null">
+                AND s.loan_date <![CDATA[ <= ]]> #{loanDateTo}
+            </if>
+        </where>
         ORDER BY d.id
     </select>
 
@@ -178,13 +182,17 @@
                d.returned
         FROM slip s
         JOIN slip_detail d ON s.id = d.slip_id
-        WHERE d.code LIKE CONCAT(#{code}, '%')
-        <if test="loanDateFrom != null">
-            AND s.loan_date <![CDATA[ >= ]]> #{loanDateFrom}
-        </if>
-        <if test="loanDateTo != null">
-            AND s.loan_date <![CDATA[ <= ]]> #{loanDateTo}
-        </if>
+        <where>
+            <if test="code != null and code != ''">
+                d.code LIKE CONCAT(#{code}, '%')
+            </if>
+            <if test="loanDateFrom != null">
+                AND s.loan_date <![CDATA[ >= ]]> #{loanDateFrom}
+            </if>
+            <if test="loanDateTo != null">
+                AND s.loan_date <![CDATA[ <= ]]> #{loanDateTo}
+            </if>
+        </where>
         ORDER BY s.slip_no, d.id
     </select>
 

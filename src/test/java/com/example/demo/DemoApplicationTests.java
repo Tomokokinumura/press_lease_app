@@ -237,13 +237,33 @@ class DemoApplicationTests {
         dto.setName("Product A");
         dto.setReturned(Boolean.TRUE);
 
-        given(slipService.findBySlipNo("202604001")).willReturn(List.of(dto));
+        given(slipService.findBySlipNo("202604001", null, null)).willReturn(List.of(dto));
 
         mockMvc.perform(get("/api/slip").param("slipNo", "202604001"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].slipNo").value("202604001"))
                 .andExpect(jsonPath("$[0].code").value("12345678"))
                 .andExpect(jsonPath("$[0].returned").value(true));
+    }
+
+    @Test
+    void slipApiAllowsDateOnlySearch() throws Exception {
+        SlipDetailDto dto = new SlipDetailDto();
+        dto.setSlipId(10);
+        dto.setSlipNo("202604001");
+        dto.setId(1);
+        dto.setCode("12345678");
+        dto.setLoanDate(LocalDate.of(2026, 4, 7));
+
+        given(slipService.findBySlipNo(null, LocalDate.of(2026, 4, 1), LocalDate.of(2026, 4, 30)))
+                .willReturn(List.of(dto));
+
+        mockMvc.perform(get("/api/slip")
+                        .param("loanDateFrom", "2026-04-01")
+                        .param("loanDateTo", "2026-04-30"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].slipNo").value("202604001"))
+                .andExpect(jsonPath("$[0].loanDate").value("2026-04-07"));
     }
 
     @Test
@@ -255,9 +275,29 @@ class DemoApplicationTests {
         dto.setCode("12345678");
         dto.setName("Product A");
 
-        given(slipService.findByCode("12345678")).willReturn(List.of(dto));
+        given(slipService.findByCode("12345678", null, null)).willReturn(List.of(dto));
 
         mockMvc.perform(get("/api/slip/code").param("code", "12345678"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].slipNo").value("202604001"))
+                .andExpect(jsonPath("$[0].code").value("12345678"));
+    }
+
+    @Test
+    void slipCodeApiAllowsDateOnlySearch() throws Exception {
+        SlipDetailDto dto = new SlipDetailDto();
+        dto.setSlipId(10);
+        dto.setSlipNo("202604001");
+        dto.setId(1);
+        dto.setCode("12345678");
+        dto.setLoanDate(LocalDate.of(2026, 4, 7));
+
+        given(slipService.findByCode(null, LocalDate.of(2026, 4, 1), LocalDate.of(2026, 4, 30)))
+                .willReturn(List.of(dto));
+
+        mockMvc.perform(get("/api/slip/code")
+                        .param("loanDateFrom", "2026-04-01")
+                        .param("loanDateTo", "2026-04-30"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].slipNo").value("202604001"))
                 .andExpect(jsonPath("$[0].code").value("12345678"));
