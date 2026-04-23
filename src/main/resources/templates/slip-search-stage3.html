@@ -122,6 +122,18 @@
             color: var(--text);
             white-space: nowrap;
         }
+        .search-button-row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        .search-button-row button {
+            flex: 1 1 auto;
+        }
+        .search-button-row .clear-button {
+            flex: 0 0 auto;
+            min-width: 72px;
+        }
         .field-note {
             margin: 0;
             color: var(--muted);
@@ -263,7 +275,10 @@
                     <button type="button" class="copy-date-button" data-copy-from="slipLoanDateFrom" data-copy-to="slipLoanDateTo">左をコピー</button>
                 </div>
                 <p class="field-note">伝票Noが空でも、貸出日範囲だけで検索できます。空欄なら日付条件なしです。</p>
-                <button type="button" id="searchSlipButton" class="secondary">伝票Noで検索</button>
+                <div class="search-button-row">
+                    <button type="button" id="searchSlipButton" class="secondary">伝票Noで検索</button>
+                    <button type="button" id="clearSlipInputButton" class="secondary clear-button">クリア</button>
+                </div>
             </div>
             <div class="search-card">
                 <label for="codeInput">品番検索</label>
@@ -276,7 +291,10 @@
                     <button type="button" class="copy-date-button" data-copy-from="codeLoanDateFrom" data-copy-to="codeLoanDateTo">左をコピー</button>
                 </div>
                 <p class="field-note">品番が空でも、貸出日範囲だけで検索できます。空欄なら日付条件なしです。</p>
-                <button type="button" id="searchCodeButton" class="secondary">品番で検索</button>
+                <div class="search-button-row">
+                    <button type="button" id="searchCodeButton" class="secondary">品番で検索</button>
+                    <button type="button" id="clearCodeInputButton" class="secondary clear-button">クリア</button>
+                </div>
             </div>
         </div>
         <div id="message" aria-live="polite"></div>
@@ -341,6 +359,8 @@
     const codeLoanDateToInput = document.getElementById("codeLoanDateTo");
     const searchSlipButton = document.getElementById("searchSlipButton");
     const searchCodeButton = document.getElementById("searchCodeButton");
+    const clearSlipInputButton = document.getElementById("clearSlipInputButton");
+    const clearCodeInputButton = document.getElementById("clearCodeInputButton");
     const downloadButton = document.getElementById("downloadButton");
     const deleteButton = document.getElementById("deleteButton");
     const resultTable = document.getElementById("resultTable");
@@ -363,6 +383,8 @@
 
     searchSlipButton.addEventListener("click", () => runSearch("slip"));
     searchCodeButton.addEventListener("click", () => runSearch("code"));
+    clearSlipInputButton.addEventListener("click", () => clearSearchInput("slip"));
+    clearCodeInputButton.addEventListener("click", () => clearSearchInput("code"));
     downloadButton.addEventListener("click", downloadExcel);
     deleteButton.addEventListener("click", openDeleteModal);
     cancelDeleteButton.addEventListener("click", closeDeleteModal);
@@ -768,6 +790,21 @@
         }
         toInput.value = normalizeDateInputValue(fromInput.value);
         toInput.focus();
+    }
+
+    function clearSearchInput(mode) {
+        if (mode === "slip") {
+            slipNoInput.value = "";
+            slipLoanDateFromInput.value = "";
+            slipLoanDateToInput.value = "";
+            slipNoInput.focus();
+            return;
+        }
+
+        codeInput.value = "";
+        codeLoanDateFromInput.value = "";
+        codeLoanDateToInput.value = "";
+        codeInput.focus();
     }
 
     function buildActiveSearchLabel(mode, value, dateRange) {
