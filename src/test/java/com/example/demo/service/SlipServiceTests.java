@@ -138,19 +138,23 @@ class SlipServiceTests {
     }
 
     @Test
-    void findByCodeRejectsSearchWithoutTextAndDateRange() {
+    void findByCodeAllowsEmptySearch() {
+        SlipDetailMapper slipDetailMapper = mock(SlipDetailMapper.class);
+        SlipDetailDto row = new SlipDetailDto();
+        row.setSlipId(1);
+        when(slipDetailMapper.findSlipRowsByCodeWithLoanDateRange(null, null, null))
+                .thenReturn(List.of(row));
+
         SlipService service = new SlipService(
                 mock(SlipMapper.class),
-                mock(SlipDetailMapper.class),
+                slipDetailMapper,
                 mock(SlipMediaMapper.class),
                 mock(JdbcTemplate.class));
 
-        ResponseStatusException error = assertThrows(
-                ResponseStatusException.class,
-                () -> service.findByCode(null, null, null));
+        List<SlipDetailDto> result = service.findByCode(null, null, null);
 
-        assertEquals(HttpStatus.BAD_REQUEST, error.getStatusCode());
-        assertEquals("Code or loan date range is required.", error.getReason());
+        assertEquals(1, result.size());
+        verify(slipDetailMapper).findSlipRowsByCodeWithLoanDateRange(null, null, null);
     }
 
     private String currentYm() {

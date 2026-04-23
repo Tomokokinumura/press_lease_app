@@ -290,7 +290,7 @@
                     <input type="text" id="codeLoanDateTo" inputmode="numeric" maxlength="8" placeholder="yyyymmdd" autocomplete="off">
                     <button type="button" class="copy-date-button" data-copy-from="codeLoanDateFrom" data-copy-to="codeLoanDateTo">左をコピー</button>
                 </div>
-                <p class="field-note">品番が空でも、貸出日範囲だけで検索できます。空欄なら日付条件なしです。</p>
+                <p class="field-note">品番が空でも検索できます。貸出日を入れると絞り込み、空欄なら全件検索です。</p>
                 <div class="search-button-row">
                     <button type="button" id="searchCodeButton" class="secondary">品番で検索</button>
                     <button type="button" id="clearCodeInputButton" class="secondary clear-button">クリア</button>
@@ -430,7 +430,7 @@
             setMessage(dateRange.message, "error");
             return;
         }
-        if (!value && !dateRange.loanDateFrom && !dateRange.loanDateTo) {
+        if (isSlipMode && !value && !dateRange.loanDateFrom && !dateRange.loanDateTo) {
             setMessage(isSlipMode
                 ? "伝票Noまたは貸出日範囲を入力してください。"
                 : "品番または貸出日範囲を入力してください。", "error");
@@ -810,7 +810,7 @@
     function buildActiveSearchLabel(mode, value, dateRange) {
         const baseLabel = mode === "slip"
             ? `検索対象: ${value ? `伝票No ${value}` : "貸出日検索"}`
-            : `検索対象: ${value ? `品番 ${value}` : "貸出日検索"}`;
+            : `検索対象: ${value ? `品番 ${value}` : "品番全件"}`;
         if (!dateRange.fromLabel && !dateRange.toLabel) {
             return baseLabel;
         }

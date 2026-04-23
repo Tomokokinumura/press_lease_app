@@ -136,7 +136,7 @@ public class SlipService {
 
     public List<SlipDetailDto> findBySlipNo(String slipNo, LocalDate loanDateFrom, LocalDate loanDateTo) {
         ensureSlipTables();
-        validateSearchCriteria(slipNo, loanDateFrom, loanDateTo, "Slip number");
+        validateSlipNoSearchCriteria(slipNo, loanDateFrom, loanDateTo);
         validateLoanDateRange(loanDateFrom, loanDateTo);
         return enrichWithMediaRows(
                 slipDetailMapper.findSlipRowsBySlipNoWithLoanDateRange(normalizeSearchText(slipNo), loanDateFrom, loanDateTo));
@@ -148,7 +148,6 @@ public class SlipService {
 
     public List<SlipDetailDto> findByCode(String code, LocalDate loanDateFrom, LocalDate loanDateTo) {
         ensureSlipTables();
-        validateSearchCriteria(code, loanDateFrom, loanDateTo, "Code");
         validateLoanDateRange(loanDateFrom, loanDateTo);
         return enrichWithMediaRows(
                 slipDetailMapper.findSlipRowsByCodeWithLoanDateRange(normalizeSearchText(code), loanDateFrom, loanDateTo));
@@ -267,11 +266,11 @@ public class SlipService {
         return hasText(value) ? value.trim() : null;
     }
 
-    private void validateSearchCriteria(String text, LocalDate loanDateFrom, LocalDate loanDateTo, String fieldLabel) {
-        if (!hasText(text) && loanDateFrom == null && loanDateTo == null) {
+    private void validateSlipNoSearchCriteria(String slipNo, LocalDate loanDateFrom, LocalDate loanDateTo) {
+        if (!hasText(slipNo) && loanDateFrom == null && loanDateTo == null) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
-                    fieldLabel + " or loan date range is required.");
+                    "Slip number or loan date range is required.");
         }
     }
 

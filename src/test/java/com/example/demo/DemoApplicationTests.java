@@ -304,6 +304,22 @@ class DemoApplicationTests {
     }
 
     @Test
+    void slipCodeApiAllowsEmptySearch() throws Exception {
+        SlipDetailDto dto = new SlipDetailDto();
+        dto.setSlipId(10);
+        dto.setSlipNo("202604001");
+        dto.setId(1);
+        dto.setCode("12345678");
+
+        given(slipService.findByCode(null, null, null)).willReturn(List.of(dto));
+
+        mockMvc.perform(get("/api/slip/code"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].slipNo").value("202604001"))
+                .andExpect(jsonPath("$[0].code").value("12345678"));
+    }
+
+    @Test
     void slipEditApiReturnsSlipForEditing() throws Exception {
         SlipEditResponse response = new SlipEditResponse();
         response.setSlipNo("202604001");
